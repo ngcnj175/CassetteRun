@@ -55,14 +55,16 @@ export class PitchFixedPlayer {
    * @param {AudioNode}    outputNode  - 接続先（gainNode など）
    */
   constructor(ctx, audioBuffer, outputNode) {
-    this.ctx        = ctx;
-    this.buffer     = audioBuffer;
-    this.output     = outputNode;
-    this.scriptNode = null;
-    this.st         = null;
-    this.filter     = null;
-    this._tempo     = 0.001; // 初期値はほぼ停止
-    this.playing    = false;
+    this.ctx         = ctx;
+    this.buffer      = audioBuffer;
+    this.output      = outputNode;
+    this.scriptNode  = null;
+    this.st          = null;
+    this.filter      = null;
+    this._tempo      = 0.001; // 初期値はほぼ停止
+    this.playing     = false;
+    this._firstAudio = false;
+    this.onFirstAudio = null; // 最初に音が出た瞬間に呼ばれるコールバック
   }
 
   _buildFilter() {
@@ -90,6 +92,12 @@ export class PitchFixedPlayer {
       const interleaved = new Float32Array(BUFFER_SIZE * 2);
 
       const extracted = this.filter.extract(interleaved, BUFFER_SIZE);
+
+      // 初回音声出力を検知してコールバック通知
+      if (!this._firstAudio && extracted > 0) {
+        this._firstAudio = true;
+        if (this.onFirstAudio) this.onFirstAudio();
+      }
 
       // バッファ末尾 → source だけ巻き戻してループ（st は再利用）
       if (extracted < BUFFER_SIZE) {

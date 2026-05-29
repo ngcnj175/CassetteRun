@@ -25,6 +25,41 @@ let selectedTrack = null;
 let pitchFixed    = false;     // false = カセット / true = ピッチ固定
 let pitchPlayer   = null;      // PitchFixedPlayer インスタンス
 
+// ── Loading indicator ────────────────────────────────────────────────────────
+const loadingIndicator = document.getElementById('loading-indicator');
+const loadingStageEl   = document.getElementById('loading-stage');
+const loadingStepEl    = document.getElementById('loading-step');
+const loadingFill      = document.getElementById('loading-fill');
+
+const STAGES = [
+  { label: 'SoundTouch 読み込み中...',  pct: 33  }, // ① CDN DL
+  { label: 'バッファ準備中...',          pct: 66  }, // ② SoundTouch init
+  { label: '再生開始 ✓',               pct: 100 }, // ③ 初回音声出力
+];
+
+function showLoading(stepIdx) {
+  // stepIdx: 0〜2 → 各ステージ表示 / null → 非表示
+  if (stepIdx === null) {
+    loadingIndicator.style.display = 'none';
+    loadingFill.classList.remove('pulse');
+    return;
+  }
+  const s = STAGES[stepIdx];
+  loadingIndicator.style.display = 'block';
+  loadingStageEl.textContent = s.label;
+  loadingStepEl.textContent  = `${stepIdx + 1} / ${STAGES.length}`;
+  loadingFill.style.width    = `${s.pct}%`;
+
+  // ③（再生開始）以外は測定不能 → 点滅アニメーション
+  if (stepIdx < STAGES.length - 1) {
+    loadingFill.classList.add('pulse');
+  } else {
+    loadingFill.classList.remove('pulse');
+    // 1秒後に自動で閉じる
+    setTimeout(() => showLoading(null), 1000);
+  }
+}
+
 // ── Toggle switch ────────────────────────────────────────────────────────────
 pitchToggle.addEventListener('change', () => {
   pitchFixed = pitchToggle.checked;
@@ -176,13 +211,17 @@ btnStart.addEventListener('click', async () => {
 
     if (pitchFixed) {
       // 2a. ピッチ固定モード
-      statusText.textContent = 'SoundTouch 読み込み中...';
+      showLoading(0); // ① CDN読み込み中
       await loadSoundTouch();
+
+      showLoading(1); // ② バッファ準備中
       const ctx  = getContext();
       const gain = getGainNode();
       const buf  = getBuffer();
       if (ctx.state === 'suspended') ctx.resume();
       pitchPlayer = new PitchFixedPlayer(ctx, buf, gain);
+      // 初回音声出力を検知したら③完了を表示
+      pitchPlayer.onFirstAudio = () => showLoading(2);
       pitchPlayer.start();
     } else {
       // 2b. カセットモード
@@ -207,7 +246,8 @@ btnStart.addEventListener('click', async () => {
 // ── Stop ──────────────────────────────────────────────────────────────────────
 btnStop.addEventListener('click', () => {
   stopMotion();
-  stopAll(); // モード問わず両方止める
+  stopAll();
+  showLoading(null); // ゲージを閉じる
   btnStart.disabled = false;
   btnStop.disabled  = true;
   updateVisuals(0);
