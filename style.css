@@ -1,0 +1,289 @@
+/* CassetteRun — Analog Cassette / 80s Retro theme */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #1a1208;
+  --shell:     #2e1f0e;
+  --shell-hi:  #4a3018;
+  --orange:    #C8860A;
+  --orange-hi: #E8A020;
+  --beige:     #d4b896;
+  --tape:      #1c1008;
+  --label-bg:  #e8d4b0;
+  --label-fg:  #2a1a08;
+  --red:       #c0392b;
+  --font-mono: 'Courier New', Courier, monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--beige);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+  gap: 24px;
+}
+
+h1 {
+  font-size: 1.6rem;
+  letter-spacing: 0.25em;
+  color: var(--orange-hi);
+  text-transform: uppercase;
+}
+
+/* ─── Cassette shell ─── */
+.cassette {
+  position: relative;
+  width: min(480px, 96vw);
+  background: var(--shell);
+  border-radius: 12px 12px 32px 32px;
+  padding: 20px 20px 28px;
+  box-shadow:
+    0 0 0 3px var(--shell-hi),
+    0 8px 32px #00000088;
+}
+
+/* Label area */
+.cassette-label {
+  background: var(--label-bg);
+  color: var(--label-fg);
+  border-radius: 6px;
+  padding: 10px 14px 8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.cassette-label .title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+}
+.cassette-label .side {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  letter-spacing: 0.1em;
+}
+
+/* Reel window */
+.reel-window {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  padding: 12px 0;
+  position: relative;
+}
+
+/* Tape path line */
+.tape-path {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 6px;
+  background: var(--tape);
+  border-radius: 3px;
+  z-index: 0;
+}
+
+/* Sag effect */
+#tape-sag {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55%;
+  height: 14px;
+  border-radius: 0 0 50% 50%;
+  background: transparent;
+  border-bottom: 4px solid #3d2a10;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Reels */
+.reel {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 3px solid #5a3a18;
+  background:
+    radial-gradient(circle at center, #1a0e04 28%, transparent 28%),
+    repeating-conic-gradient(#2e1f0e 0deg 30deg, #1a1208 30deg 60deg);
+  position: relative;
+  z-index: 2;
+  will-change: transform;
+}
+.reel::after {
+  content: '';
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: #3d2510;
+  border: 2px solid #6a4520;
+}
+
+/* ─── VU Meter ─── */
+.vu-meter {
+  margin-top: 14px;
+  background: #0d0905;
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid #3a2510;
+}
+#vu-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--orange);
+  transition: background 0.1s;
+  border-radius: 4px;
+}
+
+/* Rate & status */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--orange);
+}
+#rate-display {
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+}
+#status-text {
+  letter-spacing: 0.1em;
+}
+
+/* ─── Controls ─── */
+.controls {
+  width: min(480px, 96vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-select {
+  display: flex;
+  gap: 12px;
+}
+.mode-select label {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border: 1px solid var(--shell-hi);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  transition: background 0.2s;
+}
+.mode-select input[type=radio] { display: none; }
+.mode-select input[type=radio]:checked + span {
+  color: var(--orange-hi);
+}
+.mode-select label:has(input:checked) {
+  background: var(--shell-hi);
+  border-color: var(--orange);
+}
+
+.file-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.file-row label {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  background: var(--shell-hi);
+  border: 1px solid var(--orange);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--orange-hi);
+  letter-spacing: 0.05em;
+}
+#file-name {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+button {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid var(--orange);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--orange-hi);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+button:hover:not(:disabled) {
+  background: var(--orange);
+  color: var(--bg);
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+#btn-permission {
+  border-color: var(--beige);
+  color: var(--beige);
+  font-size: 0.8rem;
+}
+
+/* ─── Sim slider (desktop) ─── */
+.sim-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+input[type=range] {
+  flex: 1;
+  accent-color: var(--orange);
+}
+
+/* ─── Screws ─── */
+.screws {
+  position: absolute;
+  top: 10px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 14px;
+  pointer-events: none;
+}
+.screw {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #3d2510;
+  border: 1px solid #5a3a18;
+  box-shadow: inset 0 0 3px #0008;
+}
+
+/* ─── Footer ─── */
+footer {
+  font-size: 0.65rem;
+  opacity: 0.3;
+  letter-spacing: 0.1em;
+}

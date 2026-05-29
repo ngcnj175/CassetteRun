@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>CassetteRun</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>CassetteRun</h1>
+
+  <!-- ── Cassette visual ── -->
+  <div class="cassette" role="img" aria-label="カセットテープ">
+    <div class="screws">
+      <div class="screw"></div>
+      <div class="screw"></div>
+    </div>
+
+    <div class="cassette-label">
+      <div class="title">▶ NOW PLAYING</div>
+      <div class="side">SIDE A &nbsp;|&nbsp; TYPE II</div>
+    </div>
+
+    <div class="reel-window">
+      <div class="reel" id="reel-left"></div>
+      <div class="tape-path"></div>
+      <div id="tape-sag"></div>
+      <div class="reel" id="reel-right"></div>
+    </div>
+
+    <div class="vu-meter">
+      <div id="vu-fill"></div>
+    </div>
+
+    <div class="info-row">
+      <span id="rate-display">0.00x</span>
+      <span id="status-text">■ STOPPED</span>
+    </div>
+  </div>
+
+  <!-- ── Controls ── -->
+  <div class="controls">
+
+    <!-- Mode selector -->
+    <div class="mode-select">
+      <label>
+        <input type="radio" name="mode" id="mode-mp3" value="mp3" checked>
+        <span>🎵 MP3</span>
+      </label>
+      <label>
+        <input type="radio" name="mode" id="mode-magenta" value="magenta">
+        <span>🤖 AI生成</span>
+      </label>
+    </div>
+
+    <!-- MP3 file picker -->
+    <div class="file-row" id="mp3-row">
+      <label for="file-input">📂 ファイル選択</label>
+      <input type="file" id="file-input" accept="audio/*" style="display:none">
+      <span id="file-name">未選択</span>
+    </div>
+
+    <!-- Play / Stop -->
+    <div class="btn-row">
+      <button id="btn-start">▶ START</button>
+      <button id="btn-stop" disabled>■ STOP</button>
+    </div>
+
+    <!-- iOS sensor permission -->
+    <button id="btn-permission" style="display:none">
+      センサーを許可する (iOS)
+    </button>
+
+    <!-- Desktop simulation -->
+    <div class="sim-row">
+      <span>DEBUG SPEED:</span>
+      <input type="range" id="sim-slider" min="0" max="2" step="0.01" value="0">
+      <span>2.0x</span>
+    </div>
+
+  </div>
+
+  <footer>走らないと音楽が聴けない — v0.2</footer>
+
+  <script type="module" src="js/main.js"></script>
+  <script>
+    // Show iOS permission button if needed
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+      document.getElementById('btn-permission').style.display = 'block';
+    }
+
+    // Update file name display
+    document.getElementById('file-input').addEventListener('change', function() {
+      const name = this.files[0]?.name ?? '未選択';
+      document.getElementById('file-name').textContent = name;
+    });
+  </script>
+</body>
+</html>
