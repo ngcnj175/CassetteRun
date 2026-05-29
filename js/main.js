@@ -32,6 +32,22 @@ pitchToggle.addEventListener('change', () => {
   toggleLabelR.classList.toggle('active',  pitchFixed);
 });
 
+// ── 全音源を確実に停止（モード問わず両方止める）────────────────────────────
+function stopAll() {
+  // カセットモードの AudioBufferSourceNode を停止
+  stop();
+  // ピッチ固定モードの ScriptProcessorNode を停止
+  if (pitchPlayer) {
+    pitchPlayer.stop();
+    pitchPlayer = null;
+  }
+  // gain を必ず 1.0 に戻す（0 のまま次の再生が始まるのを防ぐ）
+  const g = getGainNode();
+  const c = getContext();
+  if (g && c) g.gain.cancelScheduledValues(c.currentTime);
+  if (g && c) g.gain.setValueAtTime(1.0, c.currentTime);
+}
+
 // ── Build preset track list ───────────────────────────────────────────────────
 function buildTrackList() {
   trackList.innerHTML = '';
@@ -144,6 +160,9 @@ btnStart.addEventListener('click', async () => {
 
   btnStart.disabled = true;
 
+  // 前回の再生を確実にクリア（モード切替後の二重再生を防ぐ）
+  stopAll();
+
   try {
     // 1. バッファ読み込み
     if (selectedTrack !== 'custom') {
@@ -188,12 +207,7 @@ btnStart.addEventListener('click', async () => {
 // ── Stop ──────────────────────────────────────────────────────────────────────
 btnStop.addEventListener('click', () => {
   stopMotion();
-  if (pitchFixed && pitchPlayer) {
-    pitchPlayer.stop();
-    pitchPlayer = null;
-  } else {
-    stop();
-  }
+  stopAll(); // モード問わず両方止める
   btnStart.disabled = false;
   btnStop.disabled  = true;
   updateVisuals(0);

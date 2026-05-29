@@ -67,9 +67,12 @@ export class PitchFixedPlayer {
 
   _buildFilter() {
     const { SoundTouch, SimpleFilter, WebAudioBufferSource } = ST;
-    this.st = new SoundTouch(this.ctx.sampleRate);
+    // SoundTouch インスタンスは再利用（tempo 状態を保持するため）
+    if (!this.st) {
+      this.st = new SoundTouch(this.ctx.sampleRate);
+      this.st.pitch = 1.0; // ピッチ固定
+    }
     this.st.tempo = this._tempo;
-    this.st.pitch = 1.0; // ピッチ変換なし
     const source = new WebAudioBufferSource(this.buffer);
     this.filter = new SimpleFilter(source, this.st);
   }
@@ -88,9 +91,11 @@ export class PitchFixedPlayer {
 
       const extracted = this.filter.extract(interleaved, BUFFER_SIZE);
 
-      // バッファ末尾でループ
+      // バッファ末尾 → source だけ巻き戻してループ（st は再利用）
       if (extracted < BUFFER_SIZE) {
-        this._buildFilter();
+        const { SimpleFilter, WebAudioBufferSource } = ST;
+        const newSource = new WebAudioBufferSource(this.buffer);
+        this.filter = new SimpleFilter(newSource, this.st); // st 再利用でバッファ引き継ぎ
         const rest = new Float32Array((BUFFER_SIZE - extracted) * 2);
         this.filter.extract(rest, BUFFER_SIZE - extracted);
         interleaved.set(rest, extracted * 2);
@@ -114,11 +119,12 @@ export class PitchFixedPlayer {
 
   stop() {
     if (this.scriptNode) {
+      this.scriptNode.onaudioprocess = null; // コールバックを即座に無効化
       this.scriptNode.disconnect();
       this.scriptNode = null;
     }
-    this.filter = null;
-    this.st     = null;
+    this.filter  = null;
+    this.st      = null;
     this.playing = false;
   }
 }
