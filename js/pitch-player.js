@@ -6,38 +6,36 @@
  * ピッチ固定モード: SoundTouch + ScriptProcessorNode（速度が変わってもキー固定）
  */
 
-const SOUNDTOUCH_CDN =
-  'https://cdn.jsdelivr.net/npm/soundtouchjs@0.1.30/dist/soundtouch.js';
+// esm.sh は npm パッケージを ES module に変換して配信する CDN
+// dynamic import() で確実にクラスを取得できる
+const SOUNDTOUCH_ESM = 'https://esm.sh/soundtouchjs@0.1.30';
 const BUFFER_SIZE = 4096;
 
 let libLoaded = false;
 let ST = null; // { SoundTouch, SimpleFilter, WebAudioBufferSource }
 
-// ── CDN ロード ─────────────────────────────────────────────────────────────
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error(`script load failed: ${src}`));
-    document.head.appendChild(s);
-  });
-}
+// ── ES module ロード ───────────────────────────────────────────────────────
 
 export async function loadSoundTouch() {
   if (libLoaded) return;
-  await loadScript(SOUNDTOUCH_CDN);
 
-  // UMD build → window.soundtouchjs.* または window.SoundTouch / window.SimpleFilter
-  const ns = window.soundtouchjs ?? window;
-  const SoundTouch         = ns.SoundTouch;
-  const SimpleFilter       = ns.SimpleFilter;
-  const WebAudioBufferSource = ns.WebAudioBufferSource;
+  let mod;
+  try {
+    mod = await import(/* @vite-ignore */ SOUNDTOUCH_ESM);
+  } catch (e) {
+    throw new Error(`SoundTouchJS の読み込みに失敗しました: ${e.message}`);
+  }
+
+  // esm.sh は named exports / default export 両方ありうる
+  const SoundTouch          = mod.SoundTouch          ?? mod.default?.SoundTouch;
+  const SimpleFilter        = mod.SimpleFilter        ?? mod.default?.SimpleFilter;
+  const WebAudioBufferSource = mod.WebAudioBufferSource ?? mod.default?.WebAudioBufferSource;
 
   if (!SoundTouch || !SimpleFilter || !WebAudioBufferSource) {
-    throw new Error('SoundTouchJS の読み込みに失敗しました（グローバルが見つかりません）');
+    throw new Error(
+      `SoundTouchJS: クラスが見つかりません ` +
+      `(keys: ${Object.keys(mod).join(', ')})`
+    );
   }
 
   ST = { SoundTouch, SimpleFilter, WebAudioBufferSource };
