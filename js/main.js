@@ -82,11 +82,11 @@ btnStart.addEventListener('click', async () => {
 
       // 2. Generate sequence
       statusText.textContent = 'メロディーを生成中...';
-      const seq = await generateSequence(64, 1.05);
+      const seq = generateSequence(8, 120); // 8bars, 120bpm
 
       // 3. Render to AudioBuffer
       statusText.textContent = 'レンダリング中...';
-      const audioBuf = await renderToBuffer(seq, 120);
+      const audioBuf = await renderToBuffer(seq);
       loadBuffer(audioBuf);
 
       // 4. Play

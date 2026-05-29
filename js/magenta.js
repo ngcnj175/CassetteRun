@@ -1,122 +1,123 @@
 /**
- * MagentaJS — AI melody generation + offline rendering to AudioBuffer
+ * AI Melody Generator — Markov chain + music theory rules
  *
- * Flow:
- *   loadMagenta()  → downloads ~5MB model checkpoint (once per session)
- *   generateLoop() → MusicRNN generates a NoteSequence
- *   renderToBuffer() → OfflineAudioContext synth → AudioBuffer
- *   AudioBuffer is fed into audio.js (same playbackRate engine as MP3 mode)
+ * MagentaJS CDN の動的ロードが不安定なため、同等の確率的生成を
+ * ブラウザ完結で実装。CDN不要・オフライン動作・即時起動。
  *
- * Cost: FREE (browser-local, Google CDN, no API keys)
- * Risk: ~5MB model DL on first use; Google CDN dependency
+ * アルゴリズム:
+ *   - Cメジャーペンタトニック音階上のマルコフ連鎖
+ *   - フレーズ構造（4小節単位）でメロディーに抑揚
+ *   - 音長バリエーション（8分・4分・付点）
+ *   - OfflineAudioContext で FM シンセ → AudioBuffer
  */
 
-const CHECKPOINT_URL =
-  'https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn';
+// ── Scale & harmony ────────────────────────────────────────────────────────
 
-// ES module CDN — loaded via dynamic import(), not <script> tag
-const MAGENTA_CDN =
-  'https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/es6/core.js';
+// C major pentatonic across 2 octaves
+const SCALE = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];
 
-// Seed: 8 note motif in C major
-const SEED = {
-  notes: [
-    { pitch: 60, startTime: 0.0,  endTime: 0.25 },
-    { pitch: 62, startTime: 0.25, endTime: 0.5  },
-    { pitch: 64, startTime: 0.5,  endTime: 0.75 },
-    { pitch: 65, startTime: 0.75, endTime: 1.0  },
-    { pitch: 67, startTime: 1.0,  endTime: 1.25 },
-    { pitch: 65, startTime: 1.25, endTime: 1.5  },
-    { pitch: 64, startTime: 1.5,  endTime: 1.75 },
-    { pitch: 62, startTime: 1.75, endTime: 2.0  },
-  ],
-  totalTime: 2.0,
-  tempos: [{ time: 0, qpm: 120 }],
-};
+// Markov transition weights: index offset from current note
+// [-3, -2, -1, 0(rest), +1, +2, +3]
+const TRANSITIONS = [
+  { delta: -2, weight: 0.10 },
+  { delta: -1, weight: 0.25 },
+  { delta:  0, weight: 0.08 }, // repeat same note
+  { delta: +1, weight: 0.30 },
+  { delta: +2, weight: 0.20 },
+  { delta: +3, weight: 0.07 },
+];
 
-let musicRnn = null;
-let isLoaded = false;
-let mm = null; // will hold the dynamically imported Magenta module
+// Rhythm patterns (in quarter-note units)
+const RHYTHMS = [0.5, 0.5, 1.0, 1.0, 1.5, 2.0];
+const RHYTHM_WEIGHTS = [0.25, 0.25, 0.20, 0.15, 0.10, 0.05];
 
-// ── Load MagentaJS + model ─────────────────────────────────────────────────
+function weightedChoice(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
 
-export async function loadMagenta(onProgress = () => {}) {
-  if (isLoaded) return;
+function nextScaleIndex(current, phrasePosition, phraseLength) {
+  // Phrase ending: tend to resolve toward root (index 0 or 5)
+  const nearEnd = phrasePosition > phraseLength * 0.75;
+  const transitions = nearEnd
+    ? TRANSITIONS.map(t => ({ ...t, weight: t.delta < 0 ? t.weight * 1.8 : t.weight * 0.6 }))
+    : TRANSITIONS;
 
-  onProgress('MagentaJS を読み込み中... (初回のみ ~5MB)');
+  const delta = weightedChoice(
+    transitions.map(t => t.delta),
+    transitions.map(t => t.weight)
+  );
+  return Math.max(0, Math.min(SCALE.length - 1, current + delta));
+}
 
-  // Dynamic import works for ES modules from CDN (CORS enabled on jsDelivr)
-  try {
-    mm = await import(/* @vite-ignore */ MAGENTA_CDN);
-  } catch (e) {
-    throw new Error(`MagentaJS の読み込みに失敗しました: ${e.message}`);
+// ── Generate NoteSequence ─────────────────────────────────────────────────
+
+export function generateSequence(totalBars = 8, bpm = 120) {
+  const quarterSec = 60 / bpm;
+  const barBeats   = 4;
+  const notes      = [];
+
+  let scaleIdx  = 2; // start on E4
+  let timeSec   = 0;
+  let bar       = 0;
+  let beatInBar = 0;
+
+  while (bar < totalBars) {
+    const phraseBar    = bar % 4;
+    const phraseBeat   = phraseBar * barBeats + beatInBar;
+    const phraseLength = 4 * barBeats;
+
+    // Occasional rest (15%)
+    const isRest = Math.random() < 0.15;
+    const dur    = weightedChoice(RHYTHMS, RHYTHM_WEIGHTS) * quarterSec;
+
+    if (!isRest) {
+      scaleIdx = nextScaleIndex(scaleIdx, phraseBeat, phraseLength);
+      notes.push({
+        pitch:     SCALE[scaleIdx],
+        startTime: timeSec,
+        endTime:   timeSec + dur * 0.88, // slight staccato
+      });
+    }
+
+    timeSec   += dur;
+    beatInBar += dur / quarterSec;
+    while (beatInBar >= barBeats) {
+      beatInBar -= barBeats;
+      bar++;
+    }
   }
 
-  // The module may expose classes directly or under a default/namespace
-  const MusicRNN = mm.MusicRNN ?? mm.default?.MusicRNN;
-  const sequences = mm.sequences ?? mm.default?.sequences;
-
-  if (!MusicRNN) {
-    throw new Error('MusicRNN が見つかりません。ネットワーク接続を確認してください。');
-  }
-
-  // Store resolved refs for later use
-  mm._MusicRNN  = MusicRNN;
-  mm._sequences = sequences;
-
-  onProgress('モデルを初期化中... (数秒かかります)');
-  musicRnn = new MusicRNN(CHECKPOINT_URL);
-  await musicRnn.initialize();
-
-  isLoaded = true;
-  onProgress('AI 準備完了 ✓');
+  return { notes, totalTime: timeSec };
 }
 
-export function isReady() {
-  return isLoaded;
-}
+// ── Render NoteSequence → AudioBuffer (FM synth) ──────────────────────────
 
-// ── Generate NoteSequence ──────────────────────────────────────────────────
-
-export async function generateSequence(steps = 64, temperature = 1.05) {
-  if (!isLoaded) throw new Error('Magenta が初期化されていません');
-  const seq = await musicRnn.continueSequence(SEED, steps, temperature);
-  // Prepend the seed so we always have a full loop
-  const concatenate = mm._sequences?.concatenate;
-  const combined = concatenate ? concatenate([SEED, seq]) : seq;
-  return combined;
-}
-
-// ── Render NoteSequence → AudioBuffer (OfflineAudioContext synth) ──────────
-
-/**
- * Simple FM-ish piano synth per note.
- * All processing is local — no network calls.
- */
 function scheduleNote(ctx, pitch, startSec, durationSec) {
-  const freq = 440 * Math.pow(2, (pitch - 69) / 12);
-  const gain = ctx.createGain();
-  gain.connect(ctx.destination);
-
-  // Carrier oscillator
-  const osc = ctx.createOscillator();
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-
-  // Modulator for FM warmth
-  const mod = ctx.createOscillator();
+  const freq   = 440 * Math.pow(2, (pitch - 69) / 12);
+  const gain   = ctx.createGain();
+  const osc    = ctx.createOscillator();
+  const mod    = ctx.createOscillator();
   const modGain = ctx.createGain();
-  mod.frequency.value = freq * 2.01;
-  modGain.gain.value = freq * 0.4;
+
+  gain.connect(ctx.destination);
   mod.connect(modGain);
   modGain.connect(osc.frequency);
-
   osc.connect(gain);
 
-  // Envelope: attack → sustain → release
-  const attack  = 0.01;
-  const release = Math.min(0.12, durationSec * 0.4);
-  const vel     = 0.22;
+  osc.type          = 'triangle';
+  osc.frequency.value = freq;
+  mod.frequency.value = freq * 2.01;
+  modGain.gain.value  = freq * 0.35;
+
+  const attack  = 0.012;
+  const release = Math.min(0.15, durationSec * 0.35);
+  const vel     = 0.20;
 
   gain.gain.setValueAtTime(0, startSec);
   gain.gain.linearRampToValueAtTime(vel, startSec + attack);
@@ -125,27 +126,30 @@ function scheduleNote(ctx, pitch, startSec, durationSec) {
 
   mod.start(startSec);
   osc.start(startSec);
-  mod.stop(startSec + durationSec + 0.01);
-  osc.stop(startSec + durationSec + 0.01);
+  mod.stop(startSec + durationSec + 0.02);
+  osc.stop(startSec + durationSec + 0.02);
 }
 
-export async function renderToBuffer(noteSequence, bpm = 120) {
-  const secPerQuarter = 60 / bpm;
-
-  // Find total duration
-  const totalTime = noteSequence.notes.reduce(
-    (max, n) => Math.max(max, n.endTime), 0
-  ) * secPerQuarter;
-
+export async function renderToBuffer(noteSequence) {
+  const totalTime  = noteSequence.totalTime + 0.5;
   const sampleRate = 44100;
-  const offCtx = new OfflineAudioContext(1, Math.ceil((totalTime + 0.5) * sampleRate), sampleRate);
+  const offCtx     = new OfflineAudioContext(1, Math.ceil(totalTime * sampleRate), sampleRate);
 
   for (const note of noteSequence.notes) {
-    const start    = note.startTime * secPerQuarter;
-    const duration = (note.endTime - note.startTime) * secPerQuarter;
-    scheduleNote(offCtx, note.pitch, start, duration);
+    const duration = note.endTime - note.startTime;
+    scheduleNote(offCtx, note.pitch, note.startTime, duration);
   }
 
-  const buffer = await offCtx.startRendering();
-  return buffer;
+  return await offCtx.startRendering();
+}
+
+// ── Compatibility stubs (same API surface as before) ──────────────────────
+
+export async function loadMagenta(onProgress = () => {}) {
+  // No external loading needed — all local
+  onProgress('AI ジェネレーター 準備完了 ✓');
+}
+
+export function isReady() {
+  return true; // always ready, no model download required
 }
