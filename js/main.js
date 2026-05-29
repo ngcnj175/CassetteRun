@@ -4,8 +4,7 @@ import { loadSoundTouch, PitchFixedPlayer } from './pitch-player.js';
 import { TRACKS } from './tracks.js';
 
 // --- DOM refs ---
-const btnStart       = document.getElementById('btn-start');
-const btnStop        = document.getElementById('btn-stop');
+const btnPlayStop    = document.getElementById('btn-playstop');
 const fileInput      = document.getElementById('file-input');
 const trackList      = document.getElementById('track-list');
 const vuFill         = document.getElementById('vu-fill');
@@ -22,8 +21,9 @@ const toggleLabelR   = document.getElementById('toggle-label-r');
 
 let reelAngle     = 0;
 let selectedTrack = null;
-let pitchFixed    = false;     // false = カセット / true = ピッチ固定
-let pitchPlayer   = null;      // PitchFixedPlayer インスタンス
+let pitchFixed    = false;
+let pitchPlayer   = null;
+let isPlaying     = false;     // ボタン状態管理
 
 // ── Loading indicator ────────────────────────────────────────────────────────
 const loadingIndicator = document.getElementById('loading-indicator');
@@ -186,71 +186,71 @@ function onRate(rate) {
   updateVisuals(rate);
 }
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-btnStart.addEventListener('click', async () => {
+// ── START / STOP 統合ボタン ───────────────────────────────────────────────────
+function setPlayingState(playing) {
+  isPlaying = playing;
+  btnPlayStop.textContent = playing ? '■ STOP' : '▶ START';
+  btnPlayStop.classList.toggle('is-playing', playing);
+}
+
+btnPlayStop.addEventListener('click', async () => {
+  // ── STOP ──
+  if (isPlaying) {
+    stopMotion();
+    stopAll();
+    showLoading(null);
+    setPlayingState(false);
+    updateVisuals(0);
+    return;
+  }
+
+  // ── START ──
   if (!selectedTrack) {
     statusText.textContent = '曲を選んでください';
     return;
   }
 
-  btnStart.disabled = true;
-
-  // 前回の再生を確実にクリア（モード切替後の二重再生を防ぐ）
+  btnPlayStop.disabled = true;
   stopAll();
 
   try {
-    // 1. バッファ読み込み
     if (selectedTrack !== 'custom') {
       await loadPresetTrack(selectedTrack);
     }
     if (!hasBuffer()) {
       statusText.textContent = '曲の読み込みに失敗しました';
-      btnStart.disabled = false;
+      btnPlayStop.disabled = false;
       return;
     }
 
     if (pitchFixed) {
-      // 2a. ピッチ固定モード
-      showLoading(0); // ① CDN読み込み中
+      showLoading(0);
       await loadSoundTouch();
-
-      showLoading(1); // ② バッファ準備中
+      showLoading(1);
       const ctx  = getContext();
       const gain = getGainNode();
       const buf  = getBuffer();
       if (ctx.state === 'suspended') ctx.resume();
       pitchPlayer = new PitchFixedPlayer(ctx, buf, gain);
-      // 初回音声出力を検知したら③完了を表示
       pitchPlayer.onFirstAudio = () => showLoading(2);
       pitchPlayer.start();
     } else {
-      // 2b. カセットモード
-      pitchPlayer = null;
       play();
     }
 
   } catch (err) {
     console.error(err);
     statusText.textContent = `エラー: ${err.message}`;
-    btnStart.disabled = false;
+    btnPlayStop.disabled = false;
     return;
   }
 
-  btnStop.disabled = false;
+  btnPlayStop.disabled = false;
+  setPlayingState(true);
 
   const { ok } = await requestPermission();
   if (!ok) statusText.textContent = 'センサー非対応: スライダーで操作';
   startMotion(onRate);
-});
-
-// ── Stop ──────────────────────────────────────────────────────────────────────
-btnStop.addEventListener('click', () => {
-  stopMotion();
-  stopAll();
-  showLoading(null); // ゲージを閉じる
-  btnStart.disabled = false;
-  btnStop.disabled  = true;
-  updateVisuals(0);
 });
 
 // ── Desktop sim slider ────────────────────────────────────────────────────────

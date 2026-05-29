@@ -244,6 +244,15 @@ button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
+button.is-playing {
+  background: var(--orange);
+  color: var(--bg);
+  border-color: var(--orange-hi);
+}
+button.is-playing:hover {
+  background: #FF4500;
+  border-color: #FF4500;
+}
 #btn-permission {
   border-color: var(--beige);
   color: var(--beige);
