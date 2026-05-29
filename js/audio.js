@@ -96,3 +96,12 @@ export function getIsPlaying() {
 export function getContext() {
   return ensureContext();
 }
+
+export function getGainNode() {
+  ensureContext();
+  return gainNode;
+}
+
+export function getBuffer() {
+  return buffer;
+}

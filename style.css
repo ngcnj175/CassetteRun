@@ -389,6 +389,62 @@ input[type=range] {
   border-style: solid;
 }
 
+/* ─── Pitch toggle ─── */
+.pitch-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+.toggle-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: var(--beige);
+  opacity: 0.35;
+  transition: opacity 0.2s;
+}
+.toggle-label.active {
+  opacity: 1;
+  color: var(--orange-hi);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+.toggle-switch input { display: none; }
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #2e1f0e;
+  border: 1px solid #5a3a18;
+  border-radius: 12px;
+  transition: background 0.25s;
+}
+.toggle-switch input:checked + .toggle-track {
+  background: var(--shell-hi);
+  border-color: var(--orange);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--beige);
+  transition: transform 0.25s;
+}
+.toggle-switch input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(20px);
+  background: var(--orange-hi);
+}
+
 /* ─── Footer ─── */
 footer {
   font-size: 0.65rem;
