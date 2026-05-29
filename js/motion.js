@@ -1,9 +1,9 @@
 // Accelerometer -> normalized playbackRate (0.0 - 2.0)
 
-const SMOOTHING_WINDOW = 20;       // samples for moving average
+const SMOOTHING_WINDOW = 30;       // samples for moving average（多いほど滑らか）
 const ACCEL_MIN = 0.5;             // below this -> nearly stopped
 const ACCEL_MAX = 18.0;            // above this -> full speed (adjustable)
-const EASE_FACTOR = 0.08;          // easing coefficient (lower = smoother)
+const EASE_FACTOR = 0.04;          // easing coefficient (lower = smoother / 0.08→0.04 に変更)
 
 let samples = [];
 let currentRate = 0.0;
