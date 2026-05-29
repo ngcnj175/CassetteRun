@@ -23,7 +23,10 @@ let reelAngle     = 0;
 let selectedTrack = null;
 let pitchFixed    = false;
 let pitchPlayer   = null;
-let isPlaying     = false;     // ボタン状態管理
+let isPlaying     = false;
+
+// NoSleep.js — 画面スリープ防止（START時に有効化）
+const noSleep = typeof NoSleep !== 'undefined' ? new NoSleep() : null;
 
 // ── Loading indicator ────────────────────────────────────────────────────────
 const loadingIndicator = document.getElementById('loading-indicator');
@@ -201,6 +204,7 @@ btnPlayStop.addEventListener('click', async () => {
     showLoading(null);
     setPlayingState(false);
     updateVisuals(0);
+    noSleep?.disable(); // 画面スリープ防止を解除
     return;
   }
 
@@ -247,6 +251,7 @@ btnPlayStop.addEventListener('click', async () => {
 
   btnPlayStop.disabled = false;
   setPlayingState(true);
+  noSleep?.enable(); // 画面スリープ防止を有効化（ユーザー操作内で呼ぶ必要あり）
 
   const { ok } = await requestPermission();
   if (!ok) statusText.textContent = 'センサー非対応: スライダーで操作';
@@ -268,6 +273,14 @@ if (permBtn) {
     permBtn.disabled = ok;
   });
 }
+
+// ── 画面復帰時に AudioContext を再開 ──────────────────────────────────────────
+// 電源ボタン等で一時的にバックグラウンドになった場合のフォールバック
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && isPlaying) {
+    getContext()?.resume();
+  }
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 buildTrackList();
