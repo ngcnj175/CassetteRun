@@ -281,6 +281,31 @@ input[type=range] {
   box-shadow: inset 0 0 3px #0008;
 }
 
+/* ─── Magenta info row ─── */
+.magenta-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #3a2510;
+  border-radius: 6px;
+  background: #1e1208;
+}
+.magenta-badge {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.magenta-desc {
+  font-size: 0.78rem;
+  color: var(--beige);
+  line-height: 1.5;
+  opacity: 0.8;
+}
+.magenta-desc small {
+  opacity: 0.6;
+  font-size: 0.7rem;
+}
+
 /* ─── Footer ─── */
 footer {
   font-size: 0.65rem;
