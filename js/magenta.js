@@ -14,6 +14,7 @@
 const CHECKPOINT_URL =
   'https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn';
 
+// ES module CDN — loaded via dynamic import(), not <script> tag
 const MAGENTA_CDN =
   'https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/es6/core.js';
 
@@ -35,32 +36,36 @@ const SEED = {
 
 let musicRnn = null;
 let isLoaded = false;
+let mm = null; // will hold the dynamically imported Magenta module
 
 // ── Load MagentaJS + model ─────────────────────────────────────────────────
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(s);
-  });
-}
 
 export async function loadMagenta(onProgress = () => {}) {
   if (isLoaded) return;
 
   onProgress('MagentaJS を読み込み中... (初回のみ ~5MB)');
-  await loadScript(MAGENTA_CDN);
 
-  if (typeof mm === 'undefined') {
-    throw new Error('MagentaJS (mm) が読み込まれませんでした');
+  // Dynamic import works for ES modules from CDN (CORS enabled on jsDelivr)
+  try {
+    mm = await import(/* @vite-ignore */ MAGENTA_CDN);
+  } catch (e) {
+    throw new Error(`MagentaJS の読み込みに失敗しました: ${e.message}`);
   }
 
-  onProgress('モデルを初期化中...');
-  musicRnn = new mm.MusicRNN(CHECKPOINT_URL);
+  // The module may expose classes directly or under a default/namespace
+  const MusicRNN = mm.MusicRNN ?? mm.default?.MusicRNN;
+  const sequences = mm.sequences ?? mm.default?.sequences;
+
+  if (!MusicRNN) {
+    throw new Error('MusicRNN が見つかりません。ネットワーク接続を確認してください。');
+  }
+
+  // Store resolved refs for later use
+  mm._MusicRNN  = MusicRNN;
+  mm._sequences = sequences;
+
+  onProgress('モデルを初期化中... (数秒かかります)');
+  musicRnn = new MusicRNN(CHECKPOINT_URL);
   await musicRnn.initialize();
 
   isLoaded = true;
@@ -77,7 +82,8 @@ export async function generateSequence(steps = 64, temperature = 1.05) {
   if (!isLoaded) throw new Error('Magenta が初期化されていません');
   const seq = await musicRnn.continueSequence(SEED, steps, temperature);
   // Prepend the seed so we always have a full loop
-  const combined = mm.sequences.concatenate([SEED, seq]);
+  const concatenate = mm._sequences?.concatenate;
+  const combined = concatenate ? concatenate([SEED, seq]) : seq;
   return combined;
 }
 
