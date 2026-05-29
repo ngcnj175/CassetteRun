@@ -1,11 +1,12 @@
 import { requestPermission, startMotion, stopMotion, simulateRate } from './motion.js';
-import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer } from './audio.js';
-import { loadMagenta, generateSequence, renderToBuffer, isReady } from './magenta.js';
+import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer, getContext } from './audio.js';
+import { TRACKS } from './tracks.js';
 
 // --- DOM refs ---
 const btnStart    = document.getElementById('btn-start');
 const btnStop     = document.getElementById('btn-stop');
 const fileInput   = document.getElementById('file-input');
+const trackList   = document.getElementById('track-list');
 const vuFill      = document.getElementById('vu-fill');
 const rateDisplay = document.getElementById('rate-display');
 const statusText  = document.getElementById('status-text');
@@ -14,21 +15,76 @@ const reelRight   = document.getElementById('reel-right');
 const tapeSag     = document.getElementById('tape-sag');
 const simSlider   = document.getElementById('sim-slider');
 const permBtn     = document.getElementById('btn-permission');
-const mp3Row      = document.getElementById('mp3-row');
-const magentaRow  = document.getElementById('magenta-row');
 
-let reelAngle = 0;
+let reelAngle     = 0;
+let selectedTrack = null; // { title, file } | 'custom'
 
-// ── Mode toggle UI ───────────────────────────────────────────────────────────
-document.querySelectorAll('input[name="mode"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const isMagenta = radio.value === 'magenta';
-    mp3Row.style.display     = isMagenta ? 'none'  : 'flex';
-    magentaRow.style.display = isMagenta ? 'flex'  : 'none';
+// ── Build preset track list ───────────────────────────────────────────────
+function buildTrackList() {
+  trackList.innerHTML = '';
+
+  if (TRACKS.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'track-empty';
+    empty.textContent = '曲が登録されていません';
+    trackList.appendChild(empty);
+    return;
+  }
+
+  TRACKS.forEach((track, i) => {
+    const item = document.createElement('button');
+    item.className   = 'track-item';
+    item.dataset.idx = i;
+    item.innerHTML   = `<span class="track-num">${String(i + 1).padStart(2, '0')}</span>
+                        <span class="track-title">${track.title}</span>
+                        <span class="track-icon">▶</span>`;
+    item.addEventListener('click', () => selectTrack(track, item));
+    trackList.appendChild(item);
   });
+}
+
+function selectTrack(track, el) {
+  // Clear previous selection
+  document.querySelectorAll('.track-item').forEach(b => b.classList.remove('selected'));
+  document.getElementById('custom-track-btn').classList.remove('selected');
+
+  el.classList.add('selected');
+  selectedTrack = track;
+  fileInput.value = '';
+  statusText.textContent = `♪ ${track.title}`;
+}
+
+// ── Custom MP3 button ─────────────────────────────────────────────────────
+document.getElementById('custom-track-btn').addEventListener('click', () => {
+  fileInput.click();
 });
 
-// ── Visuals ──────────────────────────────────────────────────────────────────
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Clear preset selection
+  document.querySelectorAll('.track-item').forEach(b => b.classList.remove('selected'));
+  document.getElementById('custom-track-btn').classList.add('selected');
+
+  statusText.textContent = 'Loading...';
+  await loadFile(file);
+  selectedTrack = 'custom';
+  statusText.textContent = `♪ ${file.name}`;
+});
+
+// ── Load preset track via fetch ───────────────────────────────────────────
+async function loadPresetTrack(track) {
+  statusText.textContent = `読み込み中... ${track.title}`;
+  const res = await fetch(track.file);
+  if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+  const arrayBuffer = await res.arrayBuffer();
+  const ctx = getContext();
+  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  loadBuffer(audioBuffer);
+}
+
+// ── Visuals ───────────────────────────────────────────────────────────────
 function updateVisuals(rate) {
   const pct = (rate / 2.0) * 100;
   vuFill.style.width = `${pct}%`;
@@ -59,86 +115,58 @@ function onRate(rate) {
   updateVisuals(rate);
 }
 
-// ── Start ────────────────────────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────────────────
 btnStart.addEventListener('click', async () => {
-  const mode = document.querySelector('input[name="mode"]:checked').value;
+  if (!selectedTrack) {
+    statusText.textContent = '曲を選んでください';
+    return;
+  }
 
-  if (mode === 'mp3') {
-    if (!hasBuffer()) {
-      statusText.textContent = 'MP3を選択してください';
-      return;
+  btnStart.disabled = true;
+
+  try {
+    if (selectedTrack !== 'custom') {
+      await loadPresetTrack(selectedTrack);
     }
-    play();
-
-  } else {
-    // ── Magenta mode ──
-    btnStart.disabled = true;
-
-    try {
-      // 1. Load model (no-op if already loaded)
-      if (!isReady()) {
-        await loadMagenta(msg => { statusText.textContent = msg; });
-      }
-
-      // 2. Generate sequence
-      statusText.textContent = 'メロディーを生成中...';
-      const seq = generateSequence(8, 120); // 8bars, 120bpm
-
-      // 3. Render to AudioBuffer
-      statusText.textContent = 'レンダリング中...';
-      const audioBuf = await renderToBuffer(seq);
-      loadBuffer(audioBuf);
-
-      // 4. Play
-      play();
-      statusText.textContent = '🤖 AI BGM 再生中';
-
-    } catch (err) {
-      console.error(err);
-      statusText.textContent = `エラー: ${err.message}`;
+    if (!hasBuffer()) {
+      statusText.textContent = '曲の読み込みに失敗しました';
       btnStart.disabled = false;
       return;
     }
+    play();
+  } catch (err) {
+    console.error(err);
+    statusText.textContent = `読み込みエラー: ${err.message}`;
+    btnStart.disabled = false;
+    return;
   }
 
-  // Common: start sensor + update UI
-  btnStart.disabled = true;
-  btnStop.disabled  = false;
+  btnStop.disabled = false;
 
   const { ok, reason } = await requestPermission();
   if (!ok) {
-    statusText.textContent = `センサー非対応: スライダーで操作 (${reason})`;
+    statusText.textContent = `センサー非対応: スライダーで操作`;
   }
   startMotion(onRate);
 });
 
-// ── Stop ─────────────────────────────────────────────────────────────────────
+// ── Stop ──────────────────────────────────────────────────────────────────
 btnStop.addEventListener('click', () => {
   stopMotion();
   stop();
   btnStart.disabled = false;
   btnStop.disabled  = true;
-  statusText.textContent = '■ STOPPED';
   updateVisuals(0);
 });
 
-// ── MP3 load ─────────────────────────────────────────────────────────────────
-fileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  statusText.textContent = 'Loading...';
-  await loadFile(file);
-  statusText.textContent = `Loaded: ${file.name}`;
-});
-
-// ── Desktop sim slider ────────────────────────────────────────────────────────
+// ── Desktop sim slider ────────────────────────────────────────────────────
 if (simSlider) {
   simSlider.addEventListener('input', () => {
     simulateRate(parseFloat(simSlider.value));
   });
 }
 
-// ── iOS permission ────────────────────────────────────────────────────────────
+// ── iOS permission ────────────────────────────────────────────────────────
 if (permBtn) {
   permBtn.addEventListener('click', async () => {
     const { ok, reason } = await requestPermission();
@@ -146,3 +174,6 @@ if (permBtn) {
     permBtn.disabled = ok;
   });
 }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+buildTrackList();

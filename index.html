@@ -37,37 +37,26 @@
 
     <div class="info-row">
       <span id="rate-display">0.00x</span>
-      <span id="status-text">■ STOPPED</span>
+      <span id="status-text">曲を選んでください</span>
     </div>
   </div>
 
   <!-- ── Controls ── -->
   <div class="controls">
 
-    <!-- Mode selector -->
-    <div class="mode-select">
-      <label>
-        <input type="radio" name="mode" id="mode-mp3" value="mp3" checked>
-        <span>🎵 MP3</span>
-      </label>
-      <label>
-        <input type="radio" name="mode" id="mode-magenta" value="magenta">
-        <span>🤖 AI生成</span>
-      </label>
+    <!-- Preset track list -->
+    <div class="section-label">TRACK SELECT</div>
+    <div id="track-list" class="track-list">
+      <!-- JS で生成 -->
     </div>
 
-    <!-- MP3 file picker -->
-    <div class="file-row" id="mp3-row">
-      <label for="file-input">📂 ファイル選択</label>
-      <input type="file" id="file-input" accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*" style="display:none">
-      <span id="file-name">未選択</span>
-    </div>
-
-    <!-- Magenta info row -->
-    <div class="magenta-info" id="magenta-row" style="display:none">
-      <span class="magenta-badge">🤖 AI</span>
-      <span class="magenta-desc">STARTでメロディーを自動生成します<br><small>ブラウザ完結・DL不要・毎回違うメロディー</small></span>
-    </div>
+    <!-- Custom MP3 -->
+    <button id="custom-track-btn" class="custom-track-btn">
+      📂 自分のMP3を使う
+    </button>
+    <input type="file" id="file-input"
+           accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*"
+           style="display:none">
 
     <!-- Play / Stop -->
     <div class="btn-row">
@@ -89,21 +78,14 @@
 
   </div>
 
-  <footer>走らないと音楽が聴けない — v0.2</footer>
+  <footer>走らないと音楽が聴けない — v0.3</footer>
 
   <script type="module" src="js/main.js"></script>
   <script>
-    // Show iOS permission button if needed
     if (typeof DeviceMotionEvent !== 'undefined' &&
         typeof DeviceMotionEvent.requestPermission === 'function') {
       document.getElementById('btn-permission').style.display = 'block';
     }
-
-    // Update file name display
-    document.getElementById('file-input').addEventListener('change', function() {
-      const name = this.files[0]?.name ?? '未選択';
-      document.getElementById('file-name').textContent = name;
-    });
   </script>
 </body>
 </html>
