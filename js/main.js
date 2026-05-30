@@ -1,4 +1,4 @@
-import { requestPermission, startMotion, stopMotion, simulateRate } from './motion.js';
+import { requestPermission, startMotion, stopMotion, simulateRate, isUsingGPS } from './motion.js';
 import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer, getContext, getGainNode, getBuffer } from './audio.js';
 import { loadSoundTouch, PitchFixedPlayer } from './pitch-player.js';
 import { TRACKS } from './tracks.js';
@@ -162,10 +162,11 @@ function updateVisuals(rate) {
   tapeSag.style.opacity   = sag;
   tapeSag.style.transform = `scaleY(${1 + sag * 0.4})`;
 
+  const src = isUsingGPS() ? '📡' : '📳';
   statusText.textContent =
-    rate < 0.05 ? '■ STOPPED' :
-    rate < 0.6  ? '▶ SLOW' :
-    rate < 1.4  ? '▶▶ PLAY' : '▶▶▶ FAST';
+    rate < 0.05 ? `${src} STOPPED` :
+    rate < 0.6  ? `${src} SLOW` :
+    rate < 1.4  ? `${src} PLAY` : `${src} FAST`;
 }
 
 // ── Rate handler ──────────────────────────────────────────────────────────────
