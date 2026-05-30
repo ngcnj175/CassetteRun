@@ -79,15 +79,20 @@
       <span class="toggle-label" id="toggle-label-r">♪ ピッチ固定</span>
     </div>
 
+    <!-- Motion mode toggle -->
+    <div class="pitch-toggle-row">
+      <span class="toggle-label active" id="motion-label-l">📡 GPS</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="motion-toggle">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+      <span class="toggle-label" id="motion-label-r">📳 センサー</span>
+    </div>
+
     <!-- Play / Stop -->
     <div class="btn-row">
       <button id="btn-playstop">▶ START</button>
     </div>
-
-    <!-- iOS sensor permission -->
-    <button id="btn-permission" style="display:none">
-      センサーを許可する (iOS)
-    </button>
 
     <!-- Desktop simulation -->
     <div class="sim-row">

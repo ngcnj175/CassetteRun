@@ -1,4 +1,4 @@
-import { requestPermission, startMotion, stopMotion, simulateRate, isUsingGPS } from './motion.js';
+import { requestSensorPermission, startMotion, stopMotion, simulateRate, getMotionMode } from './motion.js';
 import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer, getContext, getGainNode, getBuffer } from './audio.js';
 import { loadSoundTouch, PitchFixedPlayer } from './pitch-player.js';
 import { TRACKS } from './tracks.js';
@@ -14,10 +14,12 @@ const reelLeft          = document.getElementById('reel-left');
 const reelRight         = document.getElementById('reel-right');
 const tapeSag           = document.getElementById('tape-sag');
 const simSlider         = document.getElementById('sim-slider');
-const permBtn           = document.getElementById('btn-permission');
 const pitchToggle       = document.getElementById('pitch-toggle');
 const toggleLabelL      = document.getElementById('toggle-label-l');
 const toggleLabelR      = document.getElementById('toggle-label-r');
+const motionToggle      = document.getElementById('motion-toggle');
+const motionLabelL      = document.getElementById('motion-label-l');
+const motionLabelR      = document.getElementById('motion-label-r');
 const trackSelectBtn    = document.getElementById('track-select-btn');
 const selectedTrackName = document.getElementById('selected-track-name');
 const trackModal        = document.getElementById('track-modal');
@@ -26,11 +28,13 @@ const modalClose        = document.getElementById('modal-close');
 const nowPlayingText    = document.getElementById('now-playing-text');
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let reelAngle     = 0;
-let selectedTrack = null;
-let pitchFixed    = false;
-let pitchPlayer   = null;
-let isPlaying     = false;
+let reelAngle        = 0;
+let selectedTrack    = null;
+let pitchFixed       = false;
+let pitchPlayer      = null;
+let isPlaying        = false;
+let motionMode       = 'gps';    // 'gps' | 'sensor'
+let sensorPermAsked  = false;    // センサー許可ダイアログ表示済みか
 
 const noSleep = typeof NoSleep !== 'undefined' ? new NoSleep() : null;
 
@@ -78,12 +82,41 @@ function setNowPlaying(title) {
   });
 }
 
-// ── Toggle ────────────────────────────────────────────────────────────────────
+// ── Pitch toggle ──────────────────────────────────────────────────────────────
 pitchToggle.addEventListener('change', () => {
   pitchFixed = pitchToggle.checked;
   toggleLabelL.classList.toggle('active', !pitchFixed);
   toggleLabelR.classList.toggle('active',  pitchFixed);
 });
+
+// ── Motion mode toggle ────────────────────────────────────────────────────────
+motionToggle.addEventListener('change', async () => {
+  const useSensor = motionToggle.checked;
+  motionMode = useSensor ? 'sensor' : 'gps';
+  motionLabelL.classList.toggle('active', !useSensor);
+  motionLabelR.classList.toggle('active',  useSensor);
+
+  // センサーモードへの初回切替時のみ許可ダイアログを表示
+  if (useSensor && !sensorPermAsked) {
+    sensorPermAsked = true;
+    const { ok, reason } = await requestSensorPermission();
+    if (!ok) {
+      // 許可されなかった場合は GPS に戻す
+      motionToggle.checked = false;
+      motionMode = 'gps';
+      motionLabelL.classList.add('active');
+      motionLabelR.classList.remove('active');
+      statusText.textContent = `センサー許可が必要です: ${reason}`;
+    }
+  }
+});
+
+// ── iOS ドラッグ・スクロール防止 ──────────────────────────────────────────────
+document.addEventListener('touchmove', (e) => {
+  // モーダルのトラックリスト内は縦スクロールを許可
+  if (e.target.closest('.modal-track-list')) return;
+  e.preventDefault();
+}, { passive: false });
 
 // ── 全音源停止 ────────────────────────────────────────────────────────────────
 function stopAll() {
@@ -180,7 +213,7 @@ function updateVisuals(rate) {
   tapeSag.style.opacity   = sag;
   tapeSag.style.transform = `scaleY(${1 + sag * 0.4})`;
 
-  const src = isUsingGPS() ? '📡' : '📳';
+  const src = getMotionMode() === 'gps' ? '📡' : '📳';
   statusText.textContent =
     rate < 0.05 ? `${src} STOPPED` :
     rate < 0.6  ? `${src} SLOW`    :
@@ -258,20 +291,11 @@ btnPlayStop.addEventListener('click', async () => {
   setPlayingState(true);
   noSleep?.enable();
 
-  const { ok } = await requestPermission();
-  if (!ok) statusText.textContent = 'センサー非対応: スライダーで操作';
-  startMotion(onRate);
+  startMotion(onRate, motionMode);
 });
 
 // ── Sim slider ────────────────────────────────────────────────────────────────
 simSlider?.addEventListener('input', () => simulateRate(parseFloat(simSlider.value)));
-
-// ── iOS permission ────────────────────────────────────────────────────────────
-permBtn?.addEventListener('click', async () => {
-  const { ok, reason } = await requestPermission();
-  permBtn.textContent = ok ? 'センサー許可済み ✓' : `失敗: ${reason}`;
-  permBtn.disabled = ok;
-});
 
 // ── 画面復帰時 AudioContext 再開 ──────────────────────────────────────────────
 document.addEventListener('visibilitychange', () => {

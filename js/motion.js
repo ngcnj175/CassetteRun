@@ -1,61 +1,55 @@
 /**
  * motion.js — 速度検出モジュール
  *
- * 優先順位:
- *   1. GPS (Geolocation API) — 実移動速度 m/s → playbackRate
- *   2. 加速度センサー (DeviceMotion) — GPS 不可時の自動フォールバック
+ * モード:
+ *   'gps'    — Geolocation API で実移動速度 (m/s) を取得（デフォルト）
+ *   'sensor' — DeviceMotion 加速度センサーで揺れ強度を取得
  *
- * GPS が取得できている間は加速度センサーの値を無視する。
+ * startMotion(callback, mode) で明示的に切り替える。
  */
 
 // ── GPS 設定 ───────────────────────────────────────────────────────────────
-const GPS_SPEED_MIN    = 0.5;   // m/s: これ以下は停止扱い
-const GPS_SPEED_NORMAL = 3.0;   // m/s: 1.0x に対応するペース（約 5:30/km）
-const GPS_SPEED_MAX    = 6.0;   // m/s: 2.0x 上限（約 2:45/km）
+const GPS_SPEED_MIN    = 0.5;   // m/s 以下は停止扱い
+const GPS_SPEED_NORMAL = 3.0;   // m/s → 1.0x（約 5:30/km ペース）
+const GPS_SPEED_MAX    = 6.0;   // m/s → 2.0x 上限
 
-// ── 加速度センサー設定（フォールバック用） ─────────────────────────────────
+// ── センサー設定 ────────────────────────────────────────────────────────────
 const SMOOTHING_WINDOW = 30;
 const ACCEL_MIN        = 0.5;
 const ACCEL_MAX        = 18.0;
 
-// ── イージング設定 ─────────────────────────────────────────────────────────
-const EASE_FACTOR = 0.04;       // 小さいほど滑らか
+// ── イージング ────────────────────────────────────────────────────────────
+const EASE_FACTOR = 0.04;
 
-// ── 状態 ───────────────────────────────────────────────────────────────────
+// ── 状態 ─────────────────────────────────────────────────────────────────
 let currentRate  = 0.0;
 let targetRate   = 0.0;
 let onRateChange = null;
 let animFrameId  = null;
-let watchId      = null;        // GPS watchPosition ID
-let usingGPS     = false;       // 現在 GPS で取得中かどうか
+let watchId      = null;
 let accelSamples = [];
+let currentMode  = 'gps'; // 現在のモード
 
-export function isUsingGPS() { return usingGPS; }
+export function getMotionMode() { return currentMode; }
 
-// ── GPS: 速度 → playbackRate ───────────────────────────────────────────────
+// ── GPS ──────────────────────────────────────────────────────────────────
 function speedToRate(speedMps) {
   if (speedMps == null || speedMps < GPS_SPEED_MIN) return 0.0;
   return Math.min(speedMps / GPS_SPEED_NORMAL, 2.0);
 }
-
 function handlePosition(pos) {
-  usingGPS = true;
   targetRate = speedToRate(pos.coords.speed);
 }
-
 function handleGPSError(err) {
-  // GPS 失敗 → 加速度センサーへフォールバック
-  usingGPS = false;
-  console.warn(`GPS 無効 (${err.message})、加速度センサーに切替`);
+  console.warn(`GPS エラー: ${err.message}`);
+  targetRate = 0;
 }
 
-// ── 加速度センサー: 揺れ強度 → playbackRate（フォールバック） ─────────────
+// ── センサー ─────────────────────────────────────────────────────────────
 function magnitude(a) {
-  return Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+  return Math.sqrt((a.x || 0) ** 2 + (a.y || 0) ** 2 + (a.z || 0) ** 2);
 }
-
 function handleMotion(e) {
-  if (usingGPS) return;           // GPS 優先
   const accel = e.acceleration || e.accelerationIncludingGravity;
   if (!accel) return;
   accelSamples.push(magnitude(accel));
@@ -65,7 +59,7 @@ function handleMotion(e) {
     : Math.min((avg - ACCEL_MIN) / (ACCEL_MAX - ACCEL_MIN) * 2.0, 2.0);
 }
 
-// ── イージング tick ────────────────────────────────────────────────────────
+// ── イージング tick ───────────────────────────────────────────────────────
 function tick() {
   currentRate += (targetRate - currentRate) * EASE_FACTOR;
   if (Math.abs(currentRate - targetRate) < 0.001) currentRate = targetRate;
@@ -73,10 +67,12 @@ function tick() {
   animFrameId = requestAnimationFrame(tick);
 }
 
-// ── iOS 加速度センサー許可（フォールバック用） ─────────────────────────────
-export async function requestPermission() {
-  if (typeof DeviceMotionEvent !== 'undefined' &&
-      typeof DeviceMotionEvent.requestPermission === 'function') {
+// ── センサー許可（iOS 用） ────────────────────────────────────────────────
+export async function requestSensorPermission() {
+  if (typeof DeviceMotionEvent === 'undefined') {
+    return { ok: false, reason: 'DeviceMotionEvent not supported' };
+  }
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
     try {
       const r = await DeviceMotionEvent.requestPermission();
       if (r !== 'granted') return { ok: false, reason: 'Permission denied' };
@@ -87,26 +83,33 @@ export async function requestPermission() {
   return { ok: true };
 }
 
-// ── 開始 ───────────────────────────────────────────────────────────────────
-export function startMotion(rateCallback) {
+// 後方互換
+export async function requestPermission() {
+  return requestSensorPermission();
+}
+
+// ── 開始 ─────────────────────────────────────────────────────────────────
+export function startMotion(rateCallback, mode = 'gps') {
+  currentMode  = mode;
   onRateChange = rateCallback;
+  accelSamples = [];
+  targetRate   = 0.0;
 
-  // GPS を試みる（許可ダイアログはブラウザが自動で出す）
-  if ('geolocation' in navigator) {
-    watchId = navigator.geolocation.watchPosition(
-      handlePosition,
-      handleGPSError,
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-    );
+  if (mode === 'gps') {
+    if ('geolocation' in navigator) {
+      watchId = navigator.geolocation.watchPosition(
+        handlePosition, handleGPSError,
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      );
+    }
+  } else {
+    window.addEventListener('devicemotion', handleMotion, { passive: true });
   }
-
-  // 加速度センサーも常に登録（GPS 不可時のフォールバック）
-  window.addEventListener('devicemotion', handleMotion, { passive: true });
 
   animFrameId = requestAnimationFrame(tick);
 }
 
-// ── 停止 ───────────────────────────────────────────────────────────────────
+// ── 停止 ─────────────────────────────────────────────────────────────────
 export function stopMotion() {
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
@@ -115,15 +118,11 @@ export function stopMotion() {
   window.removeEventListener('devicemotion', handleMotion);
   if (animFrameId) cancelAnimationFrame(animFrameId);
   animFrameId  = null;
-  usingGPS     = false;
   accelSamples = [];
+  targetRate   = 0.0;
 }
 
-// ── デスクトップ テスト用スライダー ────────────────────────────────────────
+// ── デスクトップ テスト用 ─────────────────────────────────────────────────
 export function simulateRate(rate) {
   targetRate = Math.max(0, Math.min(2.0, rate));
-}
-
-export function getConfig() {
-  return { GPS_SPEED_MIN, GPS_SPEED_NORMAL, GPS_SPEED_MAX, EASE_FACTOR };
 }

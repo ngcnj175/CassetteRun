@@ -61,7 +61,7 @@ export class PitchFixedPlayer {
     this.scriptNode  = null;
     this.st          = null;
     this.filter      = null;
-    this._tempo      = 0.001; // 初期値はほぼ停止
+    this._tempo      = 1.0;   // 1.0 で開始 → 停止は gain=0 で制御
     this.playing     = false;
     this._firstAudio = false;
     this.onFirstAudio = null; // 最初に音が出た瞬間に呼ばれるコールバック
