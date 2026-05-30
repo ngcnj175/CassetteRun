@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>CassetteRun</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>CassetteRun</h1>
-
   <!-- ── Cassette visual ── -->
-  <div class="cassette" role="img" aria-label="カセットテープ">
+  <div class="cassette">
     <div class="screws">
       <div class="screw"></div>
       <div class="screw"></div>
     </div>
 
     <div class="cassette-label">
-      <div class="title">▶ NOW PLAYING</div>
-      <div class="side">SIDE A &nbsp;|&nbsp; TYPE II</div>
+      <div class="cassette-app-title">CASSETTE▶▶RUN</div>
+      <div class="now-playing-wrap">
+        <span id="now-playing-text">---</span>
+      </div>
     </div>
 
     <div class="reel-window">
@@ -55,11 +56,10 @@
   <!-- ── Controls ── -->
   <div class="controls">
 
-    <!-- Preset track list -->
-    <div class="section-label">TRACK SELECT</div>
-    <div id="track-list" class="track-list">
-      <!-- JS で生成 -->
-    </div>
+    <!-- Track select button -->
+    <button id="track-select-btn" class="track-select-btn">
+      🎵 リストから選曲 <span id="selected-track-name">未選択</span>
+    </button>
 
     <!-- Custom MP3 -->
     <button id="custom-track-btn" class="custom-track-btn">
@@ -79,7 +79,7 @@
       <span class="toggle-label" id="toggle-label-r">♪ ピッチ固定</span>
     </div>
 
-    <!-- Play / Stop (single toggle button) -->
+    <!-- Play / Stop -->
     <div class="btn-row">
       <button id="btn-playstop">▶ START</button>
     </div>
@@ -91,14 +91,28 @@
 
     <!-- Desktop simulation -->
     <div class="sim-row">
-      <span>DEBUG SPEED:</span>
+      <span>DEBUG:</span>
       <input type="range" id="sim-slider" min="0" max="2" step="0.01" value="0">
-      <span>2.0x</span>
+      <span>2x</span>
     </div>
 
   </div>
 
-  <footer>走らないと音楽が聴けない — v0.3</footer>
+  <footer>走らないと音楽が聴けない</footer>
+
+  <!-- ── Track select modal ── -->
+  <div id="track-modal" class="modal" style="display:none" role="dialog" aria-modal="true">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <span class="modal-title">TRACK SELECT</span>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div id="track-list" class="modal-track-list">
+        <!-- JS で生成 -->
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
   <script type="module" src="js/main.js"></script>
