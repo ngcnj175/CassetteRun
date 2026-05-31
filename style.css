@@ -142,40 +142,35 @@ body {
   100% { transform: translateX(-100%); }
 }
 
-/* ─── Reel window ─── */
+/* ─── Reel window (horizontal capsule) ─── */
 .reel-window {
-  background: var(--window-bg);
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  padding: 12px 16px;
-  position: relative;
-  border: 2px solid #3a3a3a;
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
-  flex: 1;
-  min-height: 0;
-}
+  /*
+   * --reel-margin: (内側高さ - リールサイズ) / 2
+   * 内側高さ = 116px(outer) - 3px×2(border) = 110px
+   * この値を上下左右すべての余白として使う
+   */
+  --reel-size: min(92px, 20vw);
+  --reel-margin: calc((110px - var(--reel-size)) / 2);
 
-/* Side labels */
-.reel-window::before {
-  content: 'A-SIDE';
-  position: absolute;
-  bottom: 6px; left: 10px;
-  font-size: 0.5rem;
-  letter-spacing: 0.08em;
-  color: #555;
-  font-family: var(--font-mono);
+  background: #111212;
+  border-radius: 999px;
+  padding: 0;
+  position: relative;
+  border: 3px solid #2a2a2a;
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,0.8),
+    0 2px 0 rgba(255,255,255,0.07);
+  height: 116px;
+  flex-shrink: 0;
+  overflow: visible;
 }
-.reel-window::after {
-  content: 'SIDE A';
+.reel-window::before, .reel-window::after { display: none; }
+
+.reel-spacer {
   position: absolute;
-  bottom: 6px; right: 10px;
-  font-size: 0.5rem;
-  letter-spacing: 0.08em;
-  color: #555;
-  font-family: var(--font-mono);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* ─── Tape path ─── */
@@ -221,50 +216,34 @@ body {
 
 /* ─── Reels ─── */
 .reel {
-  width: min(90px, 20vw);
-  height: min(90px, 20vw);
+  width: min(92px, 20vw);
+  height: min(92px, 20vw);
   border-radius: 50%;
-  background: radial-gradient(circle at center,
-    #888 0%,
-    #aaa 20%,
-    #ddd 25%,
-    #ccc 30%,
-    #e8ecf0 35%,
-    #d0d4d8 50%,
-    #c0c4c8 65%,
-    #b8bcc0 80%,
-    #a0a4a8 100%
-  );
-  border: 2px solid #888;
+  background: transparent;
+  border: none;
   position: relative;
   z-index: 2;
   will-change: transform;
-  box-shadow:
-    0 2px 6px rgba(0,0,0,0.4),
-    inset 0 0 10px rgba(255,255,255,0.2);
   flex-shrink: 0;
-  margin: 0 auto;
+}
+.reel::before, .reel::after { display: none; }
+
+/* 上下左右すべて --reel-margin で均一配置 */
+#reel-left {
+  position: absolute;
+  top: var(--reel-margin);
+  left: var(--reel-margin);
+}
+#reel-right {
+  position: absolute;
+  top: var(--reel-margin);
+  right: var(--reel-margin);
 }
 
-/* Reel hub (center) */
-.reel::after {
-  content: '';
-  position: absolute;
-  inset: 28%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, #c0c8d0, #8090a0);
-  border: 2px solid #7080908a;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(255,255,255,0.2);
-}
-
-/* Reel spokes */
-.reel::before {
-  content: '';
-  position: absolute;
-  inset: 15%;
-  border-radius: 50%;
-  border: 2px solid rgba(128,128,128,0.3);
-  background: transparent;
+.reel-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* Spacer between reels for tape roller area */
