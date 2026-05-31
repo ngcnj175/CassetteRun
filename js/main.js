@@ -1,4 +1,4 @@
-import { requestSensorPermission, startMotion, stopMotion, simulateRate, getMotionMode } from './motion.js';
+import { requestSensorPermission, startMotion, stopMotion, getMotionMode } from './motion.js';
 import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer, getContext, getGainNode, getBuffer } from './audio.js';
 import { loadSoundTouch, PitchFixedPlayer } from './pitch-player.js';
 import { TRACKS } from './tracks.js';
@@ -13,7 +13,6 @@ const statusText        = document.getElementById('status-text');
 const reelLeft          = document.getElementById('reel-left');
 const reelRight         = document.getElementById('reel-right');
 const tapeSag           = document.getElementById('tape-sag');
-const simSlider         = document.getElementById('sim-slider');
 const pitchToggle       = document.getElementById('pitch-toggle');
 const toggleLabelL      = document.getElementById('toggle-label-l');
 const toggleLabelR      = document.getElementById('toggle-label-r');
@@ -293,9 +292,6 @@ btnPlayStop.addEventListener('click', async () => {
 
   startMotion(onRate, motionMode);
 });
-
-// ── Sim slider ────────────────────────────────────────────────────────────────
-simSlider?.addEventListener('input', () => simulateRate(parseFloat(simSlider.value)));
 
 // ── 画面復帰時 AudioContext 再開 ──────────────────────────────────────────────
 document.addEventListener('visibilitychange', () => {

@@ -59,31 +59,6 @@ body {
   flex-direction: column;
 }
 
-/* ─── Screws ─── */
-.screws {
-  position: absolute;
-  top: 10px; left: 0; right: 0;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 14px;
-  pointer-events: none;
-  z-index: 5;
-}
-.screw {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #8a9aaa, #4a5a6a);
-  border: 1px solid #3a4a5a;
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), 0 1px 2px rgba(0,0,0,0.3);
-}
-.screw::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%) rotate(45deg);
-  width: 6px; height: 1px;
-  background: #3a4a5a;
-}
 
 /* ─── Label area ─── */
 .cassette-label {
@@ -98,21 +73,6 @@ body {
   border: 1px solid #a0a8b0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 1px 3px rgba(0,0,0,0.2);
   position: relative;
-}
-.cassette-label::before {
-  content: 'A';
-  position: absolute;
-  top: 6px; left: 10px;
-  font-size: 0.6rem;
-  font-weight: bold;
-  color: #fff;
-  background: #d32f2f;
-  width: 16px; height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px;
-  line-height: 1;
 }
 .cassette-app-title {
   font-family: 'Noto Sans JP', 'Noto Sans', sans-serif;
@@ -472,18 +432,6 @@ button:disabled { opacity: 0.35; cursor: not-allowed; }
 button.is-playing { background: var(--btn-border); color: #fff; border-color: var(--highlight); }
 button.is-playing:hover { background: #c0392b; border-color: #c0392b; }
 
-/* ─── Sim slider ─── */
-.sim-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.7rem;
-  opacity: 0.5;
-}
-input[type=range] { flex: 1; accent-color: var(--highlight); }
-
-/* ─── Footer ─── */
-footer { font-size: 0.6rem; opacity: 0.25; letter-spacing: 0.1em; }
 
 /* ─── Track select modal (bottom sheet) ─── */
 .modal {
