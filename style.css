@@ -59,7 +59,6 @@ body {
   flex-direction: column;
 }
 
-
 /* ─── Label area ─── */
 .cassette-label {
   background: linear-gradient(180deg, #d8dde2 0%, #b8c0c8 100%);
@@ -126,8 +125,6 @@ body {
   height: 116px;
   flex-shrink: 0;
   overflow: visible;
-  transform: scale(0.7);
-  transform-origin: center;
 }
 .reel-window::before, .reel-window::after { display: none; }
 
@@ -136,34 +133,6 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-}
-
-/* ─── Tape path ─── */
-.tape-path {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 55%;
-  height: 5px;
-  background: var(--tape-dark);
-  border-radius: 2px;
-  z-index: 0;
-}
-#tape-sag {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50%;
-  height: 12px;
-  border-radius: 0 0 50% 50%;
-  background: transparent;
-  border-bottom: 3px solid #333;
-  opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
-  z-index: 1;
-  pointer-events: none;
 }
 
 /* Tape guides between reels */
@@ -251,14 +220,13 @@ body {
 /* ─── Info row ─── */
 .info-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 4px;
   font-size: 0.75rem;
   color: var(--text-dim);
 }
 #rate-display { font-size: 1rem; letter-spacing: 0.1em; color: var(--text); }
-#status-text  { letter-spacing: 0.08em; }
 
 /* ─── Loading indicator ─── */
 #loading-indicator {
@@ -433,7 +401,6 @@ button:hover:not(:disabled) { background: var(--btn-border); color: #fff; }
 button:disabled { opacity: 0.35; cursor: not-allowed; }
 button.is-playing { background: var(--btn-border); color: #fff; border-color: var(--highlight); }
 button.is-playing:hover { background: #c0392b; border-color: #c0392b; }
-
 
 /* ─── Track select modal (bottom sheet) ─── */
 .modal {

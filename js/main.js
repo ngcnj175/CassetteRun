@@ -9,10 +9,8 @@ const fileInput         = document.getElementById('file-input');
 const trackList         = document.getElementById('track-list');
 const vuFill            = document.getElementById('vu-fill');
 const rateDisplay       = document.getElementById('rate-display');
-const statusText        = document.getElementById('status-text');
 const reelLeft          = document.getElementById('reel-left');
 const reelRight         = document.getElementById('reel-right');
-const tapeSag           = document.getElementById('tape-sag');
 const pitchToggle       = document.getElementById('pitch-toggle');
 const toggleLabelL      = document.getElementById('toggle-label-l');
 const toggleLabelR      = document.getElementById('toggle-label-r');
@@ -105,7 +103,6 @@ motionToggle.addEventListener('change', async () => {
       motionMode = 'gps';
       motionLabelL.classList.add('active');
       motionLabelR.classList.remove('active');
-      statusText.textContent = `センサー許可が必要です: ${reason}`;
     }
   }
 });
@@ -179,17 +176,14 @@ fileInput.addEventListener('change', async (e) => {
   document.getElementById('custom-track-btn').classList.add('selected');
   trackSelectBtn.classList.remove('selected');
   selectedTrackName.textContent = '未選択';
-  statusText.textContent = 'Loading...';
   await loadFile(file);
   selectedTrack = 'custom';
   const name = file.name.replace(/\.[^.]+$/, '');
   setNowPlaying(name);
-  statusText.textContent = `♪ ${name}`;
 });
 
 // ── Load preset track ─────────────────────────────────────────────────────────
 async function loadPresetTrack(track) {
-  statusText.textContent = `読み込み中...`;
   const res = await fetch(track.file);
   if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
   const buf = await getContext().decodeAudioData(await res.arrayBuffer());
@@ -207,16 +201,6 @@ function updateVisuals(rate) {
   reelAngle += (rate * 180) / 60;
   reelLeft.style.transform  = `rotate(${reelAngle}deg)`;
   reelRight.style.transform = `rotate(${reelAngle}deg)`;
-
-  const sag = rate < 0.3 ? Math.max(0, 1 - rate / 0.3) : 0;
-  tapeSag.style.opacity   = sag;
-  tapeSag.style.transform = `scaleY(${1 + sag * 0.4})`;
-
-  const src = getMotionMode() === 'gps' ? '📡' : '📳';
-  statusText.textContent =
-    rate < 0.05 ? `${src} STOPPED` :
-    rate < 0.6  ? `${src} SLOW`    :
-    rate < 1.4  ? `${src} PLAY`    : `${src} FAST`;
 }
 
 // ── Rate handler ──────────────────────────────────────────────────────────────
@@ -248,7 +232,7 @@ btnPlayStop.addEventListener('click', async () => {
   }
 
   // ── START ──
-  if (!selectedTrack) { statusText.textContent = '曲を選んでください'; return; }
+  if (!selectedTrack) { return; }
 
   btnPlayStop.disabled = true;
 
@@ -261,7 +245,6 @@ btnPlayStop.addEventListener('click', async () => {
   try {
     if (selectedTrack !== 'custom') await loadPresetTrack(selectedTrack);
     if (!hasBuffer()) {
-      statusText.textContent = '読み込み失敗';
       btnPlayStop.disabled = false;
       return;
     }
@@ -281,7 +264,6 @@ btnPlayStop.addEventListener('click', async () => {
 
   } catch (err) {
     console.error(err);
-    statusText.textContent = `エラー: ${err.message}`;
     btnPlayStop.disabled = false;
     return;
   }
