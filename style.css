@@ -188,17 +188,6 @@ body {
   justify-content: center;
   position: relative;
 }
-.reel-spacer .tape-rollers {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-.reel-spacer .roller {
-  width: 3px;
-  height: 20px;
-  background: #444;
-  border-radius: 1px;
-}
 
 /* ─── VU Meter ─── */
 .vu-meter {
