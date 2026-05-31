@@ -207,16 +207,18 @@ body {
   border-radius: 3px;
 }
 
-/* ─── Info row ─── */
-.info-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 4px;
+/* ─── Rate display ─── */
+#rate-display {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
   font-size: 0.75rem;
-  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  color: var(--text);
+  pointer-events: none;
 }
-#rate-display { font-size: 1rem; letter-spacing: 0.1em; color: var(--text); }
 
 /* ─── Loading indicator ─── */
 #loading-indicator {
