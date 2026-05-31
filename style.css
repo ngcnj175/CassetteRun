@@ -86,6 +86,7 @@ body {
   white-space: nowrap;
   margin-bottom: 4px;
   flex-shrink: 0;
+  text-align: center;
 }
 .now-playing-wrap span {
   display: inline-block;
@@ -94,13 +95,13 @@ body {
   font-style: italic;
   letter-spacing: 0.01em;
   color: #7b5ea7;
-  padding-right: 3em;
 }
 .now-playing-wrap span.scrolling {
-  animation: marquee-scroll 10s linear infinite;
+  animation: marquee-scroll 12s linear infinite;
+  padding-right: 3em;
 }
 @keyframes marquee-scroll {
-  0%   { transform: translateX(60%); }
+  0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
 
@@ -109,6 +110,8 @@ body {
   margin-top: auto;
   padding: 4px 0 0;
   text-align: center;
+  position: relative;
+  top: -10px;
 }
 .cassette-app-title {
   font-family: 'Noto Sans JP', 'Noto Sans', sans-serif;
@@ -218,6 +221,7 @@ body {
   border: 1px solid #3a4a5a;
   width: 60%;
   align-self: center;
+  flex-shrink: 0;
 }
 #vu-fill {
   height: 100%;
