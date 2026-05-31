@@ -3,7 +3,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #2c3e50;
+  --bg:         #000000;
   --shell:      #6b7b8d;
   --shell-dark: #4a5568;
   --shell-hi:   #8899a8;
