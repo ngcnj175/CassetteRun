@@ -19,7 +19,7 @@
     </div>
 
     <div class="cassette-label">
-      <div class="cassette-app-title">CASSETTE▶▶RUN</div>
+      <div class="cassette-app-title">カセット▶▶RUN</div>
       <div class="now-playing-wrap">
         <span id="now-playing-text">---</span>
       </div>
@@ -27,9 +27,18 @@
 
     <div class="reel-window">
       <div class="reel" id="reel-left"></div>
+      <div class="reel-spacer">
+        <div class="tape-rollers">
+          <div class="roller"></div>
+          <div class="roller"></div>
+          <div class="roller"></div>
+          <div class="roller"></div>
+          <div class="roller"></div>
+        </div>
+      </div>
+      <div class="reel" id="reel-right"></div>
       <div class="tape-path"></div>
       <div id="tape-sag"></div>
-      <div class="reel" id="reel-right"></div>
     </div>
 
     <div class="vu-meter">
@@ -121,11 +130,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
   <script type="module" src="js/main.js"></script>
-  <script>
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-      document.getElementById('btn-permission').style.display = 'block';
-    }
-  </script>
 </body>
 </html>

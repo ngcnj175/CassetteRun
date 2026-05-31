@@ -1,12 +1,9 @@
 // Web Audio API playback engine
-// Both MP3 mode and Magenta mode route through this
 
 let ctx = null;
 let sourceNode = null;
 let gainNode = null;
 let buffer = null;
-let startedAt = 0;
-let pausedAt = 0;
 let isPlaying = false;
 let currentRate = 0.0;
 
@@ -44,20 +41,17 @@ function createSource() {
   return sourceNode;
 }
 
-export function play(offset = 0) {
+export function play() {
   if (!buffer) return;
   ensureContext();
   if (ctx.state === 'suspended') ctx.resume();
   const src = createSource();
-  src.start(0, offset % buffer.duration);
-  startedAt = ctx.currentTime - offset;
-  pausedAt = 0;
+  src.start(0);
   isPlaying = true;
 }
 
 export function stop() {
   if (sourceNode) {
-    pausedAt = ctx.currentTime - startedAt;
     sourceNode.onended = null;
     try { sourceNode.stop(); } catch (_) {}
     sourceNode = null;
@@ -80,17 +74,8 @@ export function setPlaybackRate(rate) {
   }
 }
 
-export function getCurrentOffset() {
-  if (!isPlaying || !ctx) return pausedAt;
-  return ctx.currentTime - startedAt;
-}
-
 export function hasBuffer() {
   return buffer !== null;
-}
-
-export function getIsPlaying() {
-  return isPlaying;
 }
 
 export function getContext() {

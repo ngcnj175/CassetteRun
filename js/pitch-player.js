@@ -37,8 +37,6 @@ export async function loadSoundTouch() {
   libLoaded = true;
 }
 
-export function isSoundTouchReady() { return libLoaded; }
-
 // ── PitchFixedPlayer ────────────────────────────────────────────────────────
 export class PitchFixedPlayer {
   constructor(ctx, audioBuffer, outputNode) {

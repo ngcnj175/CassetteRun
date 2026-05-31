@@ -83,11 +83,6 @@ export async function requestSensorPermission() {
   return { ok: true };
 }
 
-// 後方互換
-export async function requestPermission() {
-  return requestSensorPermission();
-}
-
 // ── 開始 ─────────────────────────────────────────────────────────────────
 export function startMotion(rateCallback, mode = 'gps') {
   currentMode  = mode;

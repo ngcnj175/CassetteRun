@@ -201,7 +201,7 @@ async function loadPresetTrack(track) {
 function updateVisuals(rate) {
   vuFill.style.width = `${(rate / 2.0) * 100}%`;
   vuFill.style.background =
-    rate < 0.3 ? '#8B4513' : rate < 1.0 ? '#C8860A' : rate < 1.6 ? '#E8A020' : '#FF4500';
+    rate < 0.3 ? '#4a6a8a' : rate < 1.0 ? '#6a8aaa' : rate < 1.6 ? '#90a8c0' : '#c0392b';
 
   rateDisplay.textContent = rate.toFixed(2) + 'x';
 
