@@ -76,8 +76,11 @@ body {
   letter-spacing: 0.05em;
   color: #3cad6e;
   margin-top: 2px;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
   flex-shrink: 0;
+  box-shadow: 0 1px 0 0 #9999aa;
+  width: 95%;
+  align-self: center;
 }
 
 /* ─── 曲名マーキー ─── */
@@ -87,6 +90,9 @@ body {
   margin-bottom: 4px;
   flex-shrink: 0;
   text-align: center;
+  box-shadow: 0 1px 0 0 #9999aa;
+  width: 95%;
+  align-self: center;
 }
 .now-playing-wrap span {
   display: inline-block;
@@ -103,6 +109,16 @@ body {
 @keyframes marquee-scroll {
   0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
+}
+
+/* ─── 3本目の下線（等間隔） ─── */
+.label-line {
+  height: 0;
+  margin-top: 26px;
+  border-top: 1px solid #9999aa;
+  width: 95%;
+  align-self: center;
+  flex-shrink: 0;
 }
 
 /* ─── Cassette footer ─── */
@@ -144,7 +160,7 @@ body {
   width: 70%;
   align-self: center;
   flex-shrink: 0;
-  margin-top: 28px;
+  margin-top: 3px;
   overflow: visible;
 }
 .reel-window::before, .reel-window::after { display: none; }
@@ -212,7 +228,7 @@ body {
 
 /* ─── VU Meter ─── */
 .vu-meter {
-  margin-top: 3px;
+  margin-top: 5px;
   margin-bottom: 2px;
   background: #1a1a2a;
   border-radius: 3px;
