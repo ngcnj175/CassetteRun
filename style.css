@@ -115,9 +115,11 @@ body {
   line-height: 1;
 }
 .cassette-app-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-  letter-spacing: 0.15em;
+  font-family: 'Noto Sans JP', 'Noto Sans', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.02em;
   color: #1a1a2e;
 }
 
