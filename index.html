@@ -17,10 +17,11 @@
   <!-- ── Cassette visual ── -->
   <div class="cassette">
     <div class="cassette-label">
-      <div class="cassette-app-title">カセット▶▶RUN</div>
+      <div class="now-playing-label">▼Now Playing</div>
       <div class="now-playing-wrap">
-        <span id="now-playing-text">---</span>
+        <span id="now-playing-text">Song Title / Artist name</span>
       </div>
+      <div class="label-divider"></div>
     </div>
 
     <div class="reel-window">
@@ -37,7 +38,6 @@
           <rect x="0" y="53" width="42" height="13" fill="#111212"/>
         </svg>
         <span id="rate-display">0.00x</span>
-        </svg>
       </div>
       <div class="reel" id="reel-right">
         <svg class="reel-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -51,6 +51,10 @@
 
     <div class="vu-meter">
       <div id="vu-fill"></div>
+    </div>
+
+    <div class="cassette-footer">
+      <span class="cassette-app-title">CASSETTE &#9658;&#9658; RUN</span>
     </div>
 
     <!-- Loading indicator (pitch-fixed mode only) -->
