@@ -133,6 +133,14 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  width: min(60px, 14vw);
+  height: 110px;
+  z-index: 1;
+}
+.tape-head-shape {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* Tape guides between reels */
@@ -180,14 +188,6 @@ body {
   display: block;
 }
 
-/* Spacer between reels for tape roller area */
-.reel-spacer {
-  width: min(60px, 14vw);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
 
 /* ─── VU Meter ─── */
 .vu-meter {
