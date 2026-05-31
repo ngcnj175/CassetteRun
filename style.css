@@ -19,7 +19,7 @@
   --window-bg:  #252525;
   --highlight:  #90a8c0;
   --btn-border: #5a7a9a;
-  --font-mono:  'Courier New', Courier, monospace;
+  --font-main:  'Noto Sans JP', 'Noto Sans', sans-serif;
 }
 
 /* ─── スクロール・ドラッグ完全固定 ─── */
@@ -29,7 +29,8 @@ html, body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
+  font-weight: 400;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -356,7 +357,7 @@ body {
   border: 1px solid var(--accent-hi);
   border-radius: 8px;
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -387,7 +388,7 @@ body {
   border: 1px dashed var(--accent-hi);
   border-radius: 6px;
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -458,7 +459,7 @@ button {
   border-radius: 8px;
   background: transparent;
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
   font-size: 1rem;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -553,7 +554,7 @@ footer { font-size: 0.6rem; opacity: 0.25; letter-spacing: 0.1em; }
   border: 1px solid var(--shell-dark);
   border-radius: 6px;
   color: var(--text);
-  font-family: var(--font-mono);
+  font-family: var(--font-main);
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
