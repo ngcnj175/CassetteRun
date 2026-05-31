@@ -126,6 +126,8 @@ body {
   height: 116px;
   flex-shrink: 0;
   overflow: visible;
+  transform: scale(0.7);
+  transform-origin: center;
 }
 .reel-window::before, .reel-window::after { display: none; }
 
