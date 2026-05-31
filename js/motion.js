@@ -89,6 +89,7 @@ export function startMotion(rateCallback, mode = 'gps') {
   onRateChange = rateCallback;
   accelSamples = [];
   targetRate   = 0.0;
+  currentRate  = 0.0;
 
   if (mode === 'gps') {
     if ('geolocation' in navigator) {
@@ -117,7 +118,3 @@ export function stopMotion() {
   targetRate   = 0.0;
 }
 
-// ── デスクトップ テスト用 ─────────────────────────────────────────────────
-export function simulateRate(rate) {
-  targetRate = Math.max(0, Math.min(2.0, rate));
-}

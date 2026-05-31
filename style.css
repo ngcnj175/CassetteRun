@@ -9,14 +9,8 @@
   --shell-hi:   #8899a8;
   --accent:     #3a4a5a;
   --accent-hi:  #5a6a7a;
-  --label-bg:   #c8cdd2;
-  --label-fg:   #1a1a2e;
   --text:       #d0d8e0;
   --text-dim:   #8090a0;
-  --reel-bg:    #e8ecf0;
-  --reel-hub:   #b8c0c8;
-  --tape-dark:  #1a1a1a;
-  --window-bg:  #252525;
   --highlight:  #90a8c0;
   --btn-border: #5a7a9a;
   --font-main:  'Noto Sans JP', 'Noto Sans', sans-serif;
@@ -163,8 +157,6 @@ body {
   margin-top: 3px;
   overflow: visible;
 }
-.reel-window::before, .reel-window::after { display: none; }
-
 .reel-spacer {
   position: absolute;
   left: 50%;
@@ -180,19 +172,6 @@ body {
   display: block;
 }
 
-/* Tape guides between reels */
-.reel-window .tape-guide-left,
-.reel-window .tape-guide-right {
-  position: absolute;
-  bottom: 18px;
-  width: 8px; height: 14px;
-  background: #333;
-  border-radius: 2px;
-  z-index: 1;
-}
-.reel-window .tape-guide-left  { left: 22%; }
-.reel-window .tape-guide-right { right: 22%; }
-
 /* ─── Reels ─── */
 .reel {
   width: min(64px, 14vw);
@@ -205,8 +184,6 @@ body {
   will-change: transform;
   flex-shrink: 0;
 }
-.reel::before, .reel::after { display: none; }
-
 /* 上下左右すべて --reel-margin で均一配置 */
 #reel-left {
   position: absolute;
@@ -296,13 +273,6 @@ body {
 @keyframes loadpulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
-}
-
-/* ─── Bottom tape path (visible below window) ─── */
-.cassette-bottom {
-  margin-top: 4px;
-  height: 22px;
-  position: relative;
 }
 
 /* ─── Controls ─── */

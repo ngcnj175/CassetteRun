@@ -4,7 +4,6 @@ let ctx = null;
 let sourceNode = null;
 let gainNode = null;
 let buffer = null;
-let isPlaying = false;
 let currentRate = 0.0;
 
 function ensureContext() {
@@ -47,7 +46,6 @@ export function play() {
   if (ctx.state === 'suspended') ctx.resume();
   const src = createSource();
   src.start(0);
-  isPlaying = true;
 }
 
 export function stop() {
@@ -56,7 +54,6 @@ export function stop() {
     try { sourceNode.stop(); } catch (_) {}
     sourceNode = null;
   }
-  isPlaying = false;
 }
 
 export function setPlaybackRate(rate) {

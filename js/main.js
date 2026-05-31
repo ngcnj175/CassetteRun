@@ -1,4 +1,4 @@
-import { requestSensorPermission, startMotion, stopMotion, getMotionMode } from './motion.js';
+import { requestSensorPermission, startMotion, stopMotion } from './motion.js';
 import { loadFile, loadBuffer, play, stop, setPlaybackRate, hasBuffer, getContext, getGainNode, getBuffer } from './audio.js';
 import { loadSoundTouch, PitchFixedPlayer } from './pitch-player.js';
 import { TRACKS } from './tracks.js';
