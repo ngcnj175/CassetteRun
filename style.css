@@ -108,11 +108,10 @@ body {
 .reel-window {
   /*
    * --reel-margin: (内側高さ - リールサイズ) / 2
-   * 内側高さ = 116px(outer) - 3px×2(border) = 110px
-   * この値を上下左右すべての余白として使う
+   * 内側高さ = 81px(outer) - 3px×2(border) = 75px
    */
-  --reel-size: min(92px, 20vw);
-  --reel-margin: calc((110px - var(--reel-size)) / 2);
+  --reel-size: min(64px, 14vw);
+  --reel-margin: calc((75px - var(--reel-size)) / 2);
 
   background: #111212;
   border-radius: 999px;
@@ -122,7 +121,7 @@ body {
   box-shadow:
     inset 0 3px 10px rgba(0,0,0,0.8),
     0 2px 0 rgba(255,255,255,0.07);
-  height: 116px;
+  height: 81px;
   flex-shrink: 0;
   overflow: visible;
 }
@@ -133,8 +132,8 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(60px, 14vw);
-  height: 110px;
+  width: min(42px, 10vw);
+  height: 66px;
   z-index: 1;
 }
 .tape-head-shape {
@@ -158,8 +157,8 @@ body {
 
 /* ─── Reels ─── */
 .reel {
-  width: min(92px, 20vw);
-  height: min(92px, 20vw);
+  width: min(64px, 14vw);
+  height: min(64px, 14vw);
   border-radius: 50%;
   background: transparent;
   border: none;
