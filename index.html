@@ -64,65 +64,106 @@
         <div id="loading-fill"></div>
       </div>
     </div>
-
   </div>
 
-  <!-- ── Controls ── -->
+  <!-- ── Deck controls ── -->
   <div class="controls">
 
-    <!-- Track select button -->
-    <button id="track-select-btn" class="track-select-btn">
-      リストから選曲 <span id="selected-track-name">未選択</span>
-    </button>
-
-    <!-- Custom MP3 -->
-    <button id="custom-track-btn" class="custom-track-btn">
-      自分のMP3を使う
-    </button>
-    <input type="file" id="file-input"
-           accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*"
-           style="display:none">
-
-    <!-- Pitch mode toggle -->
-    <div class="pitch-toggle-row">
-      <span class="toggle-label" id="toggle-label-l">カセット</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="pitch-toggle">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-      <span class="toggle-label" id="toggle-label-r">ピッチ固定</span>
+    <!-- Tape status -->
+    <div class="tape-status-panel">
+      <span class="tape-status-label">TAPE</span>
+      <span class="tape-status-name" id="tape-status-name">— NO TAPE —</span>
     </div>
 
-    <!-- Motion mode toggle -->
-    <div class="pitch-toggle-row">
-      <span class="toggle-label active" id="motion-label-l">GPS</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="motion-toggle">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-      <span class="toggle-label" id="motion-label-r">センサー</span>
+    <!-- Row 1: SET buttons -->
+    <div class="btn-row deck-row">
+      <button id="btn-set-tape" class="deck-btn">SET TAPE</button>
+      <button id="btn-set-single" class="deck-btn">SET SINGLE</button>
     </div>
 
-    <!-- Play / Stop -->
-    <div class="btn-row">
-      <button id="btn-playstop">▶ START</button>
+    <!-- Row 2: Transport -->
+    <div class="btn-row deck-row">
+      <button id="btn-rew" class="deck-btn deck-transport">◀◀ REW</button>
+      <button id="btn-playstop" class="deck-btn deck-transport deck-play">▶ PLAY</button>
+      <button id="btn-ff" class="deck-btn deck-transport">FF ▶▶</button>
+    </div>
+
+    <!-- Toggles (compact) -->
+    <div class="toggles-compact-row">
+      <div class="pitch-toggle-row">
+        <span class="toggle-label active" id="toggle-label-l">カセット</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pitch-toggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+        <span class="toggle-label" id="toggle-label-r">ピッチ固定</span>
+      </div>
+      <div class="pitch-toggle-row">
+        <span class="toggle-label active" id="motion-label-l">GPS</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="motion-toggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+        <span class="toggle-label" id="motion-label-r">センサー</span>
+      </div>
     </div>
 
   </div>
 
-  <!-- ── Track select modal ── -->
-  <div id="track-modal" class="modal" style="display:none" role="dialog" aria-modal="true">
-    <div class="modal-overlay" id="modal-overlay"></div>
+  <!-- ── TAPE SELECT modal ── -->
+  <div id="tape-modal" class="modal" style="display:none" role="dialog" aria-modal="true">
+    <div class="modal-overlay" id="tape-modal-overlay"></div>
     <div class="modal-sheet">
       <div class="modal-header">
-        <span class="modal-title">TRACK SELECT</span>
-        <button class="modal-close" id="modal-close">✕</button>
+        <button class="modal-back" id="tape-modal-back" style="display:none">◀</button>
+        <span class="modal-title" id="tape-modal-title">SELECT TAPE</span>
+        <button class="modal-close" id="tape-modal-close">✕</button>
       </div>
-      <div id="track-list" class="modal-track-list">
-        <!-- JS で生成 -->
+
+      <!-- Sub-view: Tape list -->
+      <div id="tape-view-list" class="tape-view">
+        <div id="tape-list-container" class="modal-track-list"></div>
+      </div>
+
+      <!-- Sub-view: Tracks in selected tape -->
+      <div id="tape-view-tracks" class="tape-view" style="display:none">
+        <div id="tape-track-list" class="modal-track-list"></div>
+        <div class="modal-action-bar">
+          <button id="tape-set-btn" class="deck-btn-action">▶ SET THIS TAPE</button>
+        </div>
+      </div>
+
+      <!-- Sub-view: New tape creation -->
+      <div id="tape-view-new" class="tape-view" style="display:none">
+        <div class="new-tape-header">
+          <label class="new-tape-field-label">TAPE NAME</label>
+          <input type="text" id="new-tape-name" class="new-tape-input" placeholder="My Mix" maxlength="30" autocomplete="off">
+        </div>
+        <div id="new-tape-track-list" class="modal-track-list new-tape-tracks"></div>
+        <div class="modal-action-bar new-tape-actions">
+          <button id="new-tape-add-preset" class="deck-btn-sm">＋ PRESET</button>
+          <button id="new-tape-add-local" class="deck-btn-sm">＋ FROM DEVICE</button>
+          <button id="new-tape-save" class="deck-btn-action">SAVE TAPE</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- ── Preset track picker modal ── -->
+  <div id="preset-picker-modal" class="modal" style="display:none">
+    <div class="modal-overlay" id="preset-picker-overlay"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <span class="modal-title">ADD TRACK</span>
+        <button class="modal-close" id="preset-picker-close">✕</button>
+      </div>
+      <div id="preset-picker-list" class="modal-track-list"></div>
+    </div>
+  </div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="single-file-input" accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*" style="display:none">
+  <input type="file" id="tape-file-input" accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*" multiple style="display:none">
 
   <script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
   <script type="module" src="js/main.js"></script>
