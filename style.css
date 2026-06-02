@@ -140,6 +140,27 @@ body {
   color: #ffffff;
   text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
 }
+.title-arrows {
+  display: inline-flex;
+  gap: 5px;
+  margin-right: 0.18em;
+  align-items: center;
+  vertical-align: middle;
+  transform: skewX(-12deg);
+  position: relative;
+  top: -0.08em;
+}
+.title-arrows::before,
+.title-arrows::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 0.4em solid transparent;
+  border-bottom: 0.4em solid transparent;
+  border-left: 0.48em solid #ffffff;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.25));
+}
 
 /* ─── Reel window ─── */
 .reel-window {
