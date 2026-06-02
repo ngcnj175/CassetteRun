@@ -774,3 +774,24 @@ body {
   flex-shrink: 0;
 }
 .track-del-btn:hover { background: #3a1a1a; border-color: #aa5050; color: #ff9090; }
+
+/* ─── Lock row ─── */
+.lock-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 0 2px;
+}
+.lock-track {
+  background: var(--accent) !important;
+  border-color: var(--accent-hi) !important;
+}
+#lock-toggle:checked + .lock-track {
+  background: #5a3010 !important;
+  border-color: #c07820 !important;
+}
+#lock-toggle:checked + .lock-track .toggle-thumb {
+  transform: translateX(18px);
+  background: #f0a030;
+}

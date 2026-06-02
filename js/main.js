@@ -21,6 +21,9 @@ const toggleLabelR      = document.getElementById('toggle-label-r');
 const motionToggle      = document.getElementById('motion-toggle');
 const motionLabelL      = document.getElementById('motion-label-l');
 const motionLabelR      = document.getElementById('motion-label-r');
+const lockToggle        = document.getElementById('lock-toggle');
+const lockLabelL        = document.getElementById('lock-label-l');
+const lockLabelR        = document.getElementById('lock-label-r');
 const nowPlayingText    = document.getElementById('now-playing-text');
 const tapeStatusName    = document.getElementById('tape-status-name');
 
@@ -579,6 +582,14 @@ pitchToggle.addEventListener('change', () => {
   pitchFixed = pitchToggle.checked;
   toggleLabelL.classList.toggle('active', !pitchFixed);
   toggleLabelR.classList.toggle('active',  pitchFixed);
+});
+
+lockToggle.addEventListener('change', () => {
+  const locked = lockToggle.checked;
+  lockLabelL.classList.toggle('active', !locked);
+  lockLabelR.classList.toggle('active', locked);
+  [btnPlayStop, btnRew, btnFf, btnSetTape, btnSetSingle, pitchToggle, motionToggle]
+    .forEach(el => { el.disabled = locked; });
 });
 
 motionToggle.addEventListener('change', async () => {
