@@ -93,7 +93,8 @@ let reelAngle       = 0;
 let editingTape     = null;
 
 // Tape currently being previewed in the track sub-view
-let viewingTape     = null;
+let viewingTape        = null;
+let selectedTrackIdx   = 0;
 
 const noSleep = typeof NoSleep !== 'undefined' ? new NoSleep() : null;
 
@@ -174,16 +175,16 @@ function stopAll() {
 }
 
 // ── Set current tape ──────────────────────────────────────────────────────────
-function setCurrentTape(tape) {
+function setCurrentTape(tape, startIdx = 0) {
   if (isPlaying) {
     stopAll(); stopMotion();
     setPlayingState(false); updateVisuals(0);
     noSleep?.disable();
   }
   currentTape     = tape;
-  currentTrackIdx = 0;
+  currentTrackIdx = Math.max(0, Math.min(startIdx, tape.tracks.length - 1));
   updateStatusDisplay();
-  if (tape.tracks.length > 0) setNowPlaying(tape.tracks[0].title);
+  if (tape.tracks.length > 0) setNowPlaying(tape.tracks[currentTrackIdx].title);
 }
 
 // ── Load the current track into the audio engine ──────────────────────────────
@@ -319,7 +320,7 @@ function showTapeView(view) {
   tapeModalBack.style.display  = view !== 'list'   ? '' : 'none';
 
   if (view === 'list')   { tapeModalTitle.textContent = 'SELECT TAPE';  buildTapeList(); }
-  if (view === 'tracks') { tapeModalTitle.textContent = viewingTape?.name || ''; buildTapeTrackView(); }
+  if (view === 'tracks') { selectedTrackIdx = 0; tapeModalTitle.textContent = viewingTape?.name || ''; buildTapeTrackView(); }
   if (view === 'new')    { tapeModalTitle.textContent = 'NEW TAPE';     buildNewTapeView(); }
 }
 
@@ -337,7 +338,7 @@ tapeSetBtn.addEventListener('click', () => {
     if (saved) viewingTape = saved;
   }
 
-  setCurrentTape(viewingTape);
+  setCurrentTape(viewingTape, selectedTrackIdx);
   closeTapeModal();
 });
 
@@ -446,8 +447,8 @@ function buildTapeTrackView() {
 
   viewingTape.tracks.forEach((track, i) => {
     const item = document.createElement('div');
-    item.className = 'track-item';
-    item.style.cursor = 'default';
+    item.className = 'track-item' + (i === selectedTrackIdx ? ' selected' : '');
+    item.style.cursor = 'pointer';
 
     const num = document.createElement('span');
     num.className = 'track-num';
@@ -456,6 +457,14 @@ function buildTapeTrackView() {
     const title = document.createElement('span');
     title.className = 'track-title';
     title.textContent = track.title;
+
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.track-del-btn')) return;
+      selectedTrackIdx = i;
+      tapeTrackList.querySelectorAll('.track-item').forEach((el, j) => {
+        el.classList.toggle('selected', j === i);
+      });
+    });
 
     item.appendChild(num);
     item.appendChild(title);
@@ -467,6 +476,7 @@ function buildTapeTrackView() {
       delBtn.textContent = '✕';
       delBtn.addEventListener('click', () => {
         viewingTape.tracks.splice(i, 1);
+        if (selectedTrackIdx >= viewingTape.tracks.length) selectedTrackIdx = Math.max(0, viewingTape.tracks.length - 1);
         const userTapes = getUserTapes();
         const idx = userTapes.findIndex(t => t.id === viewingTape.id);
         if (idx !== -1) { userTapes[idx].tracks = viewingTape.tracks; saveUserTapes(userTapes); }
