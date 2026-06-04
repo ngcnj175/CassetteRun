@@ -804,17 +804,25 @@ body {
   background: transparent;
   border: 1px solid #3a3e4e;
   border-radius: 4px;
-  color: var(--text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
+}
+.modal-shuffle img {
+  /* 黒PNGをホワイト化してダーク背景に合わせる */
+  filter: invert(1) opacity(0.4);
+  transition: filter 0.15s;
+  display: block;
 }
 .modal-shuffle.is-active {
-  color: var(--highlight);
   border-color: var(--highlight);
   background: rgba(144,168,192,0.1);
+}
+.modal-shuffle.is-active img {
+  /* アクティブ時: ハイライトカラー (#90a8c0) に近似 */
+  filter: invert(1) opacity(1) sepia(1) saturate(0.6) hue-rotate(185deg);
 }
 
 /* ─── Track list item wrapper (swipe-to-delete) ─── */
