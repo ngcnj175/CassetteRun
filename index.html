@@ -127,6 +127,12 @@
       <div class="modal-header">
         <button class="modal-back" id="tape-modal-back" style="display:none">◀</button>
         <span class="modal-title" id="tape-modal-title">SELECT TAPE</span>
+        <button class="modal-shuffle" id="tape-modal-shuffle" style="display:none" aria-label="Shuffle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+            <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+          </svg>
+        </button>
         <button class="modal-close" id="tape-modal-close">✕</button>
       </div>
 
@@ -165,6 +171,7 @@
     <div class="modal-sheet">
       <div class="modal-header">
         <span class="modal-title">ADD TRACK</span>
+        <button class="deck-btn-sm" id="track-add-from-device" style="font-size:0.65rem;padding:5px 8px;margin-right:4px">FROM DEVICE</button>
         <button class="modal-close" id="preset-picker-close">✕</button>
       </div>
       <div id="preset-picker-list" class="modal-track-list"></div>

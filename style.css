@@ -796,6 +796,81 @@ body {
 }
 .track-del-btn:hover { background: #3a1a1a; border-color: #aa5050; color: #ff9090; }
 
+/* ─── Shuffle button (modal header) ─── */
+.modal-shuffle {
+  flex: unset;
+  width: 32px; height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #3a3e4e;
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.modal-shuffle.is-active {
+  color: var(--highlight);
+  border-color: var(--highlight);
+  background: rgba(144,168,192,0.1);
+}
+
+/* ─── Track list item wrapper (swipe-to-delete) ─── */
+.track-list-item {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.track-list-item .track-item {
+  will-change: transform;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Drag handle ─── */
+.track-drag-handle {
+  flex: unset;
+  width: 24px;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-dim);
+  opacity: 0.4;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ─── Dragging state ─── */
+.track-dragging {
+  z-index: 10;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+  opacity: 0.95;
+}
+
+/* ─── + New Track button ─── */
+.track-new-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px dashed #3a4a6a;
+  border-radius: 6px;
+  color: #6888a8;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.track-new-btn:hover { background: #1a1e30; border-color: #4a5a8a; color: #90a8c8; }
+
 /* ─── Lock row ─── */
 .lock-row {
   display: flex;

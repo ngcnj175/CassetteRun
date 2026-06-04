@@ -50,6 +50,10 @@ const presetPickerModal   = document.getElementById('preset-picker-modal');
 const presetPickerOverlay = document.getElementById('preset-picker-overlay');
 const presetPickerClose   = document.getElementById('preset-picker-close');
 const presetPickerList    = document.getElementById('preset-picker-list');
+const trackAddFromDevice  = document.getElementById('track-add-from-device');
+
+// Tape modal extra controls
+const tapeModalShuffle = document.getElementById('tape-modal-shuffle');
 
 // Loading indicator
 const loadingIndicator = document.getElementById('loading-indicator');
@@ -95,6 +99,13 @@ let editingTape     = null;
 // Tape currently being previewed in the track sub-view
 let viewingTape        = null;
 let selectedTrackIdx   = 0;
+
+// Draft state for non-builtin tape track editing
+let draftTracks  = null;
+let draftShuffle = false;
+let pickerMode   = 'new-tape'; // 'new-tape' | 'add-track'
+let shuffleEnabled = false;
+let dragAbort    = null;
 
 const noSleep = typeof NoSleep !== 'undefined' ? new NoSleep() : null;
 
@@ -183,6 +194,7 @@ function setCurrentTape(tape, startIdx = 0) {
   }
   currentTape     = tape;
   currentTrackIdx = Math.max(0, Math.min(startIdx, tape.tracks.length - 1));
+  shuffleEnabled  = tape.shuffle || false;
   updateStatusDisplay();
   if (tape.tracks.length > 0) setNowPlaying(tape.tracks[currentTrackIdx].title);
 }
@@ -276,7 +288,14 @@ async function changeTrack(delta) {
     stopAll(); stopMotion(); setPlayingState(false); updateVisuals(0);
     noSleep?.disable();
   }
-  currentTrackIdx = (currentTrackIdx + delta + currentTape.tracks.length) % currentTape.tracks.length;
+  if (shuffleEnabled && currentTape.tracks.length > 1) {
+    let newIdx;
+    do { newIdx = Math.floor(Math.random() * currentTape.tracks.length); }
+    while (newIdx === currentTrackIdx);
+    currentTrackIdx = newIdx;
+  } else {
+    currentTrackIdx = (currentTrackIdx + delta + currentTape.tracks.length) % currentTape.tracks.length;
+  }
   setNowPlaying(currentTape.tracks[currentTrackIdx].title);
   updateStatusDisplay();
   if (wasPlaying) await startPlayback();
@@ -319,10 +338,38 @@ function showTapeView(view) {
   tapeViewNew.style.display    = view === 'new'    ? 'flex' : 'none';
   tapeModalBack.style.display  = view !== 'list'   ? '' : 'none';
 
-  if (view === 'list')   { tapeModalTitle.textContent = 'SELECT TAPE';  buildTapeList(); }
-  if (view === 'tracks') { selectedTrackIdx = 0; tapeModalTitle.textContent = viewingTape?.name || ''; buildTapeTrackView(); }
-  if (view === 'new')    { tapeModalTitle.textContent = 'NEW TAPE';     buildNewTapeView(); }
+  const isEditableTracks = view === 'tracks' && viewingTape && !viewingTape.isBuiltin;
+  tapeModalClose.style.display   = isEditableTracks ? 'none' : '';
+  tapeModalShuffle.style.display = isEditableTracks ? '' : 'none';
+
+  if (view === 'list') {
+    tapeModalTitle.textContent = 'SELECT TAPE';
+    buildTapeList();
+  }
+  if (view === 'tracks') {
+    selectedTrackIdx = 0;
+    tapeModalTitle.textContent = viewingTape?.name || '';
+    if (!viewingTape.isBuiltin) {
+      draftTracks  = viewingTape.tracks.map(t => ({ ...t }));
+      draftShuffle = viewingTape.shuffle || false;
+      updateShuffleBtn();
+    }
+    buildTapeTrackView();
+  }
+  if (view === 'new') {
+    tapeModalTitle.textContent = 'NEW TAPE';
+    buildNewTapeView();
+  }
 }
+
+function updateShuffleBtn() {
+  tapeModalShuffle.classList.toggle('is-active', draftShuffle);
+}
+
+tapeModalShuffle.addEventListener('click', () => {
+  draftShuffle = !draftShuffle;
+  updateShuffleBtn();
+});
 
 btnSetTape.addEventListener('click', openTapeModal);
 tapeModalClose.addEventListener('click', closeTapeModal);
@@ -332,13 +379,22 @@ tapeModalBack.addEventListener('click', () => showTapeView('list'));
 tapeSetBtn.addEventListener('click', () => {
   if (!viewingTape) return;
 
-  // For user tapes, re-fetch from localStorage to get latest (after track edits)
-  if (!viewingTape.isBuiltin) {
+  if (!viewingTape.isBuiltin && draftTracks !== null) {
+    const userTapes = getUserTapes();
+    const idx = userTapes.findIndex(t => t.id === viewingTape.id);
+    if (idx !== -1) {
+      userTapes[idx].tracks  = draftTracks;
+      userTapes[idx].shuffle = draftShuffle;
+      saveUserTapes(userTapes);
+      viewingTape = userTapes[idx];
+    }
+  } else if (!viewingTape.isBuiltin) {
     const saved = getUserTapes().find(t => t.id === viewingTape.id);
     if (saved) viewingTape = saved;
   }
 
-  setCurrentTape(viewingTape, selectedTrackIdx);
+  const clampedIdx = Math.max(0, Math.min(selectedTrackIdx, (viewingTape.tracks?.length || 1) - 1));
+  setCurrentTape(viewingTape, clampedIdx);
   closeTapeModal();
 });
 
@@ -410,6 +466,7 @@ function addSwipeBehavior(wrapper, content, delBtn) {
   }
 
   wrapper.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.track-drag-handle')) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     dx = 0;
@@ -437,56 +494,106 @@ function addSwipeBehavior(wrapper, content, delBtn) {
 // ─ Track list view for selected tape ─────────────────────────────────────────
 function buildTapeTrackView() {
   tapeTrackList.innerHTML = '';
-  if (!viewingTape || viewingTape.tracks.length === 0) {
+  if (dragAbort) { dragAbort.abort(); dragAbort = null; }
+
+  const isEditable = !viewingTape.isBuiltin;
+  const tracks = isEditable && draftTracks ? draftTracks : viewingTape.tracks;
+
+  if (tracks.length === 0) {
     const el = document.createElement('div');
     el.className = 'track-empty';
     el.textContent = 'このテープには曲がありません';
     tapeTrackList.appendChild(el);
-    return;
+  } else {
+    tracks.forEach((track, i) => {
+      if (isEditable) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'track-list-item';
+
+        const content = document.createElement('div');
+        content.className = 'track-item' + (i === selectedTrackIdx ? ' selected' : '');
+        content.dataset.idx = String(i);
+        content.style.cursor = 'pointer';
+
+        const num = document.createElement('span');
+        num.className = 'track-num';
+        num.textContent = String(i + 1).padStart(2, '0');
+
+        const title = document.createElement('span');
+        title.className = 'track-title';
+        title.textContent = track.title;
+
+        const handle = document.createElement('span');
+        handle.className = 'track-drag-handle';
+        handle.textContent = '≡';
+
+        content.addEventListener('click', (e) => {
+          if (e.target.closest('.track-drag-handle')) return;
+          selectedTrackIdx = i;
+          tapeTrackList.querySelectorAll('.track-item').forEach((el, j) => {
+            el.classList.toggle('selected', j === i);
+          });
+        });
+
+        content.appendChild(num);
+        content.appendChild(title);
+        content.appendChild(handle);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'tape-swipe-delete';
+        delBtn.textContent = 'DELETE';
+        delBtn.addEventListener('click', () => {
+          draftTracks.splice(i, 1);
+          if (selectedTrackIdx >= draftTracks.length) selectedTrackIdx = Math.max(0, draftTracks.length - 1);
+          buildTapeTrackView();
+        });
+
+        wrapper.appendChild(content);
+        wrapper.appendChild(delBtn);
+        addSwipeBehavior(wrapper, content, delBtn);
+        tapeTrackList.appendChild(wrapper);
+      } else {
+        const item = document.createElement('div');
+        item.className = 'track-item' + (i === selectedTrackIdx ? ' selected' : '');
+        item.dataset.idx = String(i);
+        item.style.cursor = 'pointer';
+
+        const num = document.createElement('span');
+        num.className = 'track-num';
+        num.textContent = String(i + 1).padStart(2, '0');
+
+        const title = document.createElement('span');
+        title.className = 'track-title';
+        title.textContent = track.title;
+
+        item.addEventListener('click', () => {
+          selectedTrackIdx = i;
+          tapeTrackList.querySelectorAll('.track-item').forEach((el, j) => {
+            el.classList.toggle('selected', j === i);
+          });
+        });
+
+        item.appendChild(num);
+        item.appendChild(title);
+        tapeTrackList.appendChild(item);
+      }
+    });
   }
 
-  viewingTape.tracks.forEach((track, i) => {
-    const item = document.createElement('div');
-    item.className = 'track-item' + (i === selectedTrackIdx ? ' selected' : '');
-    item.style.cursor = 'pointer';
-
-    const num = document.createElement('span');
-    num.className = 'track-num';
-    num.textContent = String(i + 1).padStart(2, '0');
-
-    const title = document.createElement('span');
-    title.className = 'track-title';
-    title.textContent = track.title;
-
-    item.addEventListener('click', (e) => {
-      if (e.target.closest('.track-del-btn')) return;
-      selectedTrackIdx = i;
-      tapeTrackList.querySelectorAll('.track-item').forEach((el, j) => {
-        el.classList.toggle('selected', j === i);
-      });
+  if (isEditable) {
+    const newBtn = document.createElement('button');
+    newBtn.className = 'track-new-btn';
+    newBtn.textContent = '＋  New Track';
+    newBtn.addEventListener('click', () => {
+      pickerMode = 'add-track';
+      openPresetPicker();
     });
+    tapeTrackList.appendChild(newBtn);
 
-    item.appendChild(num);
-    item.appendChild(title);
-
-    // User tapes: allow track deletion
-    if (!viewingTape.isBuiltin) {
-      const delBtn = document.createElement('button');
-      delBtn.className = 'track-del-btn';
-      delBtn.textContent = '✕';
-      delBtn.addEventListener('click', () => {
-        viewingTape.tracks.splice(i, 1);
-        if (selectedTrackIdx >= viewingTape.tracks.length) selectedTrackIdx = Math.max(0, viewingTape.tracks.length - 1);
-        const userTapes = getUserTapes();
-        const idx = userTapes.findIndex(t => t.id === viewingTape.id);
-        if (idx !== -1) { userTapes[idx].tracks = viewingTape.tracks; saveUserTapes(userTapes); }
-        buildTapeTrackView();
-      });
-      item.appendChild(delBtn);
+    if (draftTracks && draftTracks.length > 1) {
+      enableTrackDrag(tapeTrackList, draftTracks);
     }
-
-    tapeTrackList.appendChild(item);
-  });
+  }
 }
 
 // ─ New tape view ──────────────────────────────────────────────────────────────
@@ -531,6 +638,84 @@ function renderNewTapeTrackList() {
   });
 }
 
+// ─ Drag-to-reorder for track list ────────────────────────────────────────────
+function enableTrackDrag(listEl, tracks) {
+  if (dragAbort) dragAbort.abort();
+  dragAbort = new AbortController();
+  const signal = dragAbort.signal;
+
+  let dragEl = null, dragIdx = -1, overIdx = -1, startY = 0;
+
+  function getWrappers() {
+    return Array.from(listEl.querySelectorAll('.track-list-item'));
+  }
+
+  const onStart = (e) => {
+    if (!e.target.closest('.track-drag-handle')) return;
+    e.preventDefault();
+    const wrappers = getWrappers();
+    dragEl = e.target.closest('.track-list-item');
+    if (!dragEl) return;
+    dragIdx = wrappers.indexOf(dragEl);
+    overIdx = dragIdx;
+    startY  = e.touches[0].clientY;
+    dragEl.classList.add('track-dragging');
+  };
+
+  const onMove = (e) => {
+    if (!dragEl) return;
+    e.preventDefault();
+    const dy = e.touches[0].clientY - startY;
+    dragEl.style.transform = `translateY(${dy}px)`;
+
+    const wrappers = getWrappers();
+    const { top, bottom, height } = dragEl.getBoundingClientRect();
+    const center = top + height / 2;
+    let newOver = dragIdx;
+    wrappers.forEach((el, i) => {
+      if (el === dragEl) return;
+      const r = el.getBoundingClientRect();
+      if (center > r.top && center < r.bottom) newOver = i;
+    });
+
+    if (newOver !== overIdx) {
+      overIdx = newOver;
+      const itemH = dragEl.offsetHeight + 6;
+      wrappers.forEach((el, i) => {
+        if (el === dragEl) return;
+        el.style.transition = 'transform 0.15s';
+        if      (dragIdx < overIdx && i > dragIdx && i <= overIdx) el.style.transform = `translateY(-${itemH}px)`;
+        else if (dragIdx > overIdx && i >= overIdx && i < dragIdx) el.style.transform = `translateY(${itemH}px)`;
+        else el.style.transform = '';
+      });
+    }
+  };
+
+  const onEnd = () => {
+    if (!dragEl) return;
+    const finalIdx = overIdx;
+    dragEl.classList.remove('track-dragging');
+    dragEl.style.transform = '';
+
+    if (finalIdx !== dragIdx) {
+      const [removed] = tracks.splice(dragIdx, 1);
+      tracks.splice(finalIdx, 0, removed);
+      if      (selectedTrackIdx === dragIdx) selectedTrackIdx = finalIdx;
+      else if (dragIdx < finalIdx && selectedTrackIdx > dragIdx  && selectedTrackIdx <= finalIdx) selectedTrackIdx--;
+      else if (dragIdx > finalIdx && selectedTrackIdx >= finalIdx && selectedTrackIdx < dragIdx)  selectedTrackIdx++;
+      buildTapeTrackView();
+    } else {
+      getWrappers().forEach(el => { el.style.transform = ''; el.style.transition = ''; });
+    }
+    dragEl = null; dragIdx = -1; overIdx = -1;
+  };
+
+  listEl.addEventListener('touchstart', onStart,  { passive: false, signal });
+  listEl.addEventListener('touchmove',  onMove,   { passive: false, signal });
+  listEl.addEventListener('touchend',   onEnd,    { signal });
+  listEl.addEventListener('touchcancel',onEnd,    { signal });
+}
+
 // ─ Preset picker ──────────────────────────────────────────────────────────────
 function openPresetPicker() {
   presetPickerList.innerHTML = '';
@@ -541,8 +726,14 @@ function openPresetPicker() {
                       <span class="track-title">${escHtml(track.title)}</span>
                       <span class="track-icon">＋</span>`;
     item.addEventListener('click', () => {
-      editingTape.tracks.push({ type: 'preset', title: track.title, file: track.file });
-      renderNewTapeTrackList();
+      const t = { type: 'preset', title: track.title, file: track.file };
+      if (pickerMode === 'add-track') {
+        draftTracks.push(t);
+        buildTapeTrackView();
+      } else {
+        editingTape.tracks.push(t);
+        renderNewTapeTrackList();
+      }
       presetPickerModal.style.display = 'none';
     });
     presetPickerList.appendChild(item);
@@ -550,12 +741,17 @@ function openPresetPicker() {
   presetPickerModal.style.display = 'flex';
 }
 
-newTapeAddPreset.addEventListener('click', openPresetPicker);
+newTapeAddPreset.addEventListener('click', () => { pickerMode = 'new-tape'; openPresetPicker(); });
 presetPickerClose.addEventListener('click',   () => { presetPickerModal.style.display = 'none'; });
 presetPickerOverlay.addEventListener('click', () => { presetPickerModal.style.display = 'none'; });
 
-// ─ Add local files to new tape ────────────────────────────────────────────────
-newTapeAddLocal.addEventListener('click', () => tapeFileInput.click());
+trackAddFromDevice.addEventListener('click', () => {
+  presetPickerModal.style.display = 'none';
+  tapeFileInput.click();
+});
+
+// ─ Add local files to new tape / existing tape ───────────────────────────────
+newTapeAddLocal.addEventListener('click', () => { pickerMode = 'new-tape'; tapeFileInput.click(); });
 
 tapeFileInput.addEventListener('change', (e) => {
   Array.from(e.target.files).forEach(file => {
@@ -563,10 +759,13 @@ tapeFileInput.addEventListener('change', (e) => {
     const objectUrl = URL.createObjectURL(file);
     localBlobs.set(id, { file, objectUrl });
     const name = file.name.replace(/\.[^.]+$/, '');
-    editingTape.tracks.push({ type: 'local', id, title: name, objectUrl });
+    const t = { type: 'local', id, title: name, objectUrl };
+    if (pickerMode === 'add-track') { draftTracks.push(t); }
+    else { editingTape.tracks.push(t); }
   });
   tapeFileInput.value = '';
-  renderNewTapeTrackList();
+  if (pickerMode === 'add-track') { buildTapeTrackView(); }
+  else { renderNewTapeTrackList(); }
 });
 
 // ─ Save new tape ──────────────────────────────────────────────────────────────
