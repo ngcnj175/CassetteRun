@@ -330,9 +330,11 @@ function openTapeModal() {
 }
 function closeTapeModal() {
   tapeModal.style.display = 'none';
+  blurActiveInput();
 }
 
 function showTapeView(view) {
+  blurActiveInput(); // ビュー切替時に入力フォーカスを解除
   tapeViewList.style.display   = view === 'list'   ? 'flex' : 'none';
   tapeViewTracks.style.display = view === 'tracks' ? 'flex' : 'none';
   tapeViewNew.style.display    = view === 'new'    ? 'flex' : 'none';
@@ -829,6 +831,42 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && isPlaying) getContext()?.resume();
 });
+
+// ── iOS Shake-to-Undo 防止 ────────────────────────────────────────────────────
+// テキスト入力の Undo スタックをリセットする
+function clearUndoHistory(el) {
+  if (!el || !('value' in el)) return;
+  const v = el.value;
+  el.value = '';
+  el.value = v;
+}
+
+// アクティブな入力要素をブラーしてフォーカスを解除する
+function blurActiveInput() {
+  const el = document.activeElement;
+  if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+    clearUndoHistory(el);
+    el.blur();
+  }
+}
+
+// タッチ開始時、入力フィールド外ならブラー
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest('input[type="text"], input[type="search"], textarea')) return;
+  blurActiveInput();
+}, { passive: true });
+
+// テープ名入力: ブラー時に Undo 履歴をクリア
+newTapeNameInput.addEventListener('blur', () => clearUndoHistory(newTapeNameInput));
+
+// execCommand('undo') を無効化（シェイク確定後のフォールバック）
+try {
+  const _exec = document.execCommand.bind(document);
+  document.execCommand = (cmd, showUI, val) => {
+    if (typeof cmd === 'string' && cmd.toLowerCase() === 'undo') return false;
+    return _exec(cmd, showUI, val);
+  };
+} catch (_) { /* 非対応ブラウザは無視 */ }
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
