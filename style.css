@@ -923,12 +923,12 @@ body {
 }
 .track-new-btn:hover { background: #1a1e30; border-color: #4a5a8a; color: #90a8c8; }
 
-/* ─── Gear button (cassette top-right) ─── */
+/* ─── Gear button (full-screen top-right) ─── */
 .gear-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
+  position: fixed;
+  top: max(14px, calc(env(safe-area-inset-top) + 8px));
+  right: max(14px, calc(env(safe-area-inset-right) + 8px));
+  z-index: 100;
   width: 40px;
   height: 40px;
   border-radius: 50%;
