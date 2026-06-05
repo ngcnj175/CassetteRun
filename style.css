@@ -931,24 +931,18 @@ body {
   z-index: 100;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: rgba(20, 22, 38, 0.82);
-  border: 1px solid #3a4a5a;
+  background: transparent;
+  border: none;
   color: var(--text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color 0.15s;
 }
 .gear-btn:active:not(:disabled) {
   color: var(--highlight);
-  border-color: var(--highlight);
-  background: rgba(40, 50, 70, 0.9);
 }
 .gear-btn:disabled {
   opacity: 0.25;
