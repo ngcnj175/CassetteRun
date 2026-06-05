@@ -280,7 +280,7 @@ body {
 #vu-fill {
   height: 100%;
   width: 0%;
-  background: var(--highlight);
+  background: #a8c8e0;  /* 明るいブルー */
   transition: background 0.1s;
   border-radius: 3px;
 }
