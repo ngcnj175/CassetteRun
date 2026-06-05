@@ -15,15 +15,26 @@ const vuFill            = document.getElementById('vu-fill');
 const rateDisplay       = document.getElementById('rate-display');
 const reelLeft          = document.getElementById('reel-left');
 const reelRight         = document.getElementById('reel-right');
-const pitchToggle       = document.getElementById('pitch-toggle');
-const toggleLabelL      = document.getElementById('toggle-label-l');
-const toggleLabelR      = document.getElementById('toggle-label-r');
-const motionToggle      = document.getElementById('motion-toggle');
-const motionLabelL      = document.getElementById('motion-label-l');
-const motionLabelR      = document.getElementById('motion-label-r');
 const lockToggle        = document.getElementById('lock-toggle');
 const lockLabelL        = document.getElementById('lock-label-l');
 const lockLabelR        = document.getElementById('lock-label-r');
+
+// Settings modal
+const btnSettings         = document.getElementById('btn-settings');
+const settingsModal       = document.getElementById('settings-modal');
+const settingsOverlay     = document.getElementById('settings-overlay');
+const settingsClose       = document.getElementById('settings-close');
+const sPitchToggle        = document.getElementById('s-pitch-toggle');
+const sPitchLabelL        = document.getElementById('s-pitch-label-l');
+const sPitchLabelR        = document.getElementById('s-pitch-label-r');
+const sPitchDesc          = document.getElementById('s-pitch-desc');
+const sMotionToggle       = document.getElementById('s-motion-toggle');
+const sMotionLabelL       = document.getElementById('s-motion-label-l');
+const sMotionLabelR       = document.getElementById('s-motion-label-r');
+const sMotionDesc         = document.getElementById('s-motion-desc');
+const speedCorrectionSlider = document.getElementById('speed-correction');
+const speedCorrectionVal  = document.getElementById('speed-correction-val');
+const modeStatusText      = document.getElementById('mode-status-text');
 const nowPlayingText    = document.getElementById('now-playing-text');
 const tapeStatusName    = document.getElementById('tape-status-name');
 
@@ -86,12 +97,13 @@ function nextBlobId() { return `lb_${blobIdSeq++}`; }
 // ── App state ─────────────────────────────────────────────────────────────────
 let currentTape     = null;
 let currentTrackIdx = 0;
-let isPlaying       = false;
-let pitchFixed      = false;
-let pitchPlayer     = null;
-let motionMode      = 'gps';
-let sensorPermAsked = false;
-let reelAngle       = 0;
+let isPlaying        = false;
+let pitchFixed       = false;
+let pitchPlayer      = null;
+let motionMode       = 'gps';
+let speedCorrection  = 1.0;
+let sensorPermAsked  = false;
+let reelAngle        = 0;
 
 // State for new-tape builder
 let editingTape     = null;
@@ -166,7 +178,8 @@ function updateVisuals(rate) {
   reelRight.style.transform = `rotate(${reelAngle}deg)`;
 }
 
-function onRate(rate) {
+function onRate(rawRate) {
+  const rate = rawRate * speedCorrection;
   if (pitchFixed && pitchPlayer) {
     pitchPlayer.setTempo(rate);
     const g = getGainNode();
@@ -788,42 +801,124 @@ newTapeSave.addEventListener('click', () => {
   showTapeView('list');
 });
 
-// ── Toggles ───────────────────────────────────────────────────────────────────
-pitchToggle.addEventListener('change', () => {
-  pitchFixed = pitchToggle.checked;
-  toggleLabelL.classList.toggle('active', !pitchFixed);
-  toggleLabelR.classList.toggle('active',  pitchFixed);
+// ── Settings persistence ──────────────────────────────────────────────────────
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('cassette-settings') || '{}');
+    pitchFixed      = s.pitchFixed      === true;
+    motionMode      = s.motionMode      === 'sensor' ? 'sensor' : 'gps';
+    speedCorrection = typeof s.speedCorrection === 'number' ? s.speedCorrection : 1.0;
+  } catch { /* ignore */ }
+}
+
+function saveSettings() {
+  localStorage.setItem('cassette-settings', JSON.stringify({ pitchFixed, motionMode, speedCorrection }));
+}
+
+// ── Mode status bar ───────────────────────────────────────────────────────────
+function updateModeStatusBar() {
+  const motionLabel = motionMode === 'sensor' ? 'モーションセンサー' : 'GPS計測';
+  const pitchLabel  = pitchFixed ? '固定ピッチ' : 'テープ再生';
+  const corrLabel   = Math.abs(speedCorrection - 1.0) >= 0.005 ? ` ｜ ${speedCorrection.toFixed(2)}x` : '';
+  modeStatusText.textContent = `${motionLabel} ｜ ${pitchLabel}${corrLabel}`;
+}
+
+// ── Settings modal ────────────────────────────────────────────────────────────
+function updatePitchDesc() {
+  sPitchDesc.textContent = pitchFixed
+    ? 'ピッチを一定に保ち、テンポのみ変化します'
+    : '速度変化に合わせてピッチも上下します';
+}
+
+function updateMotionDesc() {
+  sMotionDesc.textContent = motionMode === 'sensor'
+    ? '端末センサーで速度を推測します（室内・トレッドミル対応）'
+    : '位置情報から速度を算出します（屋外推奨）';
+}
+
+function updateSpeedCorrectionDisplay() {
+  speedCorrectionVal.textContent = speedCorrection.toFixed(2) + 'x';
+}
+
+function applySettingsToUI() {
+  sPitchToggle.checked = pitchFixed;
+  sPitchLabelL.classList.toggle('active', !pitchFixed);
+  sPitchLabelR.classList.toggle('active',  pitchFixed);
+  updatePitchDesc();
+
+  sMotionToggle.checked = (motionMode === 'sensor');
+  sMotionLabelL.classList.toggle('active', motionMode !== 'sensor');
+  sMotionLabelR.classList.toggle('active', motionMode === 'sensor');
+  updateMotionDesc();
+
+  speedCorrectionSlider.value = Math.round(speedCorrection * 100);
+  updateSpeedCorrectionDisplay();
+}
+
+function openSettingsModal() {
+  applySettingsToUI();
+  settingsModal.style.display = 'flex';
+}
+
+function closeSettingsModal() {
+  settingsModal.style.display = 'none';
+}
+
+btnSettings.addEventListener('click', openSettingsModal);
+settingsClose.addEventListener('click', closeSettingsModal);
+settingsOverlay.addEventListener('click', closeSettingsModal);
+
+sPitchToggle.addEventListener('change', () => {
+  pitchFixed = sPitchToggle.checked;
+  sPitchLabelL.classList.toggle('active', !pitchFixed);
+  sPitchLabelR.classList.toggle('active',  pitchFixed);
+  updatePitchDesc();
+  updateModeStatusBar();
+  saveSettings();
 });
 
-lockToggle.addEventListener('change', () => {
-  const locked = lockToggle.checked;
-  lockLabelL.classList.toggle('active', !locked);
-  lockLabelR.classList.toggle('active', locked);
-  [btnPlayStop, btnRew, btnFf, btnSetTape, btnSetSingle, pitchToggle, motionToggle]
-    .forEach(el => { el.disabled = locked; });
-});
-
-motionToggle.addEventListener('change', async () => {
-  const useSensor = motionToggle.checked;
+sMotionToggle.addEventListener('change', async () => {
+  const useSensor = sMotionToggle.checked;
   motionMode = useSensor ? 'sensor' : 'gps';
-  motionLabelL.classList.toggle('active', !useSensor);
-  motionLabelR.classList.toggle('active',  useSensor);
+  sMotionLabelL.classList.toggle('active', !useSensor);
+  sMotionLabelR.classList.toggle('active',  useSensor);
 
   if (useSensor && !sensorPermAsked) {
     sensorPermAsked = true;
     const { ok } = await requestSensorPermission();
     if (!ok) {
-      motionToggle.checked = false;
+      sMotionToggle.checked = false;
       motionMode = 'gps';
-      motionLabelL.classList.add('active');
-      motionLabelR.classList.remove('active');
+      sMotionLabelL.classList.add('active');
+      sMotionLabelR.classList.remove('active');
     }
   }
+
+  updateMotionDesc();
+  updateModeStatusBar();
+  saveSettings();
+});
+
+speedCorrectionSlider.addEventListener('input', () => {
+  speedCorrection = speedCorrectionSlider.value / 100;
+  updateSpeedCorrectionDisplay();
+  updateModeStatusBar();
+  saveSettings();
+});
+
+// ── Toggles ───────────────────────────────────────────────────────────────────
+lockToggle.addEventListener('change', () => {
+  const locked = lockToggle.checked;
+  lockLabelL.classList.toggle('active', !locked);
+  lockLabelR.classList.toggle('active', locked);
+  [btnPlayStop, btnRew, btnFf, btnSetTape, btnSetSingle, btnSettings]
+    .forEach(el => { el.disabled = locked; });
 });
 
 // ── iOS scroll lock ───────────────────────────────────────────────────────────
 document.addEventListener('touchmove', (e) => {
   if (e.target.closest('.modal-track-list')) return;
+  if (e.target.closest('.settings-body')) return;
   e.preventDefault();
 }, { passive: false });
 
@@ -874,5 +969,7 @@ function escHtml(str) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-toggleLabelL.classList.add('active');
+loadSettings();
+applySettingsToUI();
+updateModeStatusBar();
 updateStatusDisplay();

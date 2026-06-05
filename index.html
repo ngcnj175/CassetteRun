@@ -66,6 +66,11 @@
     </div>
   </div>
 
+  <!-- ── Mode status bar ── -->
+  <div id="mode-status-bar" class="mode-status-bar">
+    <span id="mode-status-text">GPS計測 ｜ テープ再生</span>
+  </div>
+
   <!-- ── Deck controls ── -->
   <div class="controls">
 
@@ -86,26 +91,6 @@
       <button id="btn-rew" class="deck-btn deck-transport">◀◀ REW</button>
       <button id="btn-playstop" class="deck-btn deck-transport deck-play">▶ PLAY</button>
       <button id="btn-ff" class="deck-btn deck-transport">FF ▶▶</button>
-    </div>
-
-    <!-- Toggles (compact) -->
-    <div class="toggles-compact-row">
-      <div class="pitch-toggle-row">
-        <span class="toggle-label active" id="toggle-label-l">カセット</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="pitch-toggle">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
-        <span class="toggle-label" id="toggle-label-r">ピッチ固定</span>
-      </div>
-      <div class="pitch-toggle-row">
-        <span class="toggle-label active" id="motion-label-l">GPS</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="motion-toggle">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
-        <span class="toggle-label" id="motion-label-r">センサー</span>
-      </div>
     </div>
 
     <!-- Lock row -->
@@ -174,6 +159,72 @@
         <button class="modal-close" id="preset-picker-close">✕</button>
       </div>
       <div id="preset-picker-list" class="modal-track-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Gear button ── -->
+  <button id="btn-settings" class="gear-btn" aria-label="設定">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- ── Settings modal ── -->
+  <div id="settings-modal" class="modal" style="display:none" role="dialog" aria-modal="true">
+    <div class="modal-overlay" id="settings-overlay"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <span class="modal-title">⚙ SETTINGS</span>
+        <button class="modal-close" id="settings-close">✕</button>
+      </div>
+      <div class="settings-body">
+
+        <!-- 再生モード -->
+        <div class="settings-section">
+          <div class="settings-section-title">再生モード</div>
+          <div class="settings-toggle-row">
+            <span class="settings-side-label active" id="s-pitch-label-l">テープ再生</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="s-pitch-toggle">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+            <span class="settings-side-label" id="s-pitch-label-r">固定ピッチ</span>
+          </div>
+          <div class="settings-desc" id="s-pitch-desc">速度変化に合わせてピッチも上下します</div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 速度取得方法 -->
+        <div class="settings-section">
+          <div class="settings-section-title">速度取得方法</div>
+          <div class="settings-toggle-row">
+            <span class="settings-side-label active" id="s-motion-label-l">GPS計測</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="s-motion-toggle">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+            <span class="settings-side-label" id="s-motion-label-r">モーションセンサー</span>
+          </div>
+          <div class="settings-desc" id="s-motion-desc">位置情報から速度を算出します（屋外推奨）</div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 速度補正 -->
+        <div class="settings-section">
+          <div class="settings-section-title">速度補正</div>
+          <div class="settings-slider-wrap">
+            <span class="settings-slider-edge">−20%</span>
+            <input type="range" id="speed-correction" class="settings-slider" min="80" max="120" value="100" step="1">
+            <span class="settings-slider-edge">＋20%</span>
+          </div>
+          <div class="settings-slider-readout">補正値：<span id="speed-correction-val">1.00x</span></div>
+          <div class="settings-desc">歩幅やGPS精度の差を補正します。デフォルトは 1.00x（補正なし）</div>
+        </div>
+
+      </div>
     </div>
   </div>
 
