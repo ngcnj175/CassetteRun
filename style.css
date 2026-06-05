@@ -137,7 +137,7 @@ body {
 /* ─── テープ名表示（固定配置） ─── */
 .tape-name-wrap {
   position: absolute;
-  top: 58px;   /* track name (top:26 + h:30 = 56) + 2px gap */
+  top: 54px;   /* track name (top:26 + h:30 = 56) - 2px margin */
   left: 2.5%;
   right: 2.5%;
   height: 20px;  /* 0.78rem × line-height ~1.4 ≈ 18px に余裕 */
