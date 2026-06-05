@@ -926,7 +926,7 @@ body {
 /* ─── Gear button (full-screen top-right) ─── */
 .gear-btn {
   position: fixed;
-  top: 40px;
+  top: 60px;
   right: 3vw;
   z-index: 100;
   width: 40px;
