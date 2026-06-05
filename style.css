@@ -82,11 +82,12 @@ body {
   left: 2.5%;
   right: 2.5%;
   height: 1px;
-  background: #9999aa;
-  /* カセット上端(0)〜リール上端(83px)を3等分 */
-  /* Line1: 83÷3×1 ≈ 28px  Line2: 83÷3×2 ≈ 55px */
-  top: 28px;
-  box-shadow: 0 27px 0 0 #9999aa;  /* 28 + 27 = 55px */
+  background: #c0c0c8;
+  opacity: 0.5;
+  /* カセット上端(0)〜リール上端(83px)を3等分、さらに10px下 */
+  /* Line1: 28px + 10px = 38px  Line2: 55px + 10px = 65px */
+  top: 38px;
+  box-shadow: 0 27px 0 0 #c0c0c8;  /* 38 + 27 = 65px */
 }
 
 /* ─── Layer 2: 上部テキスト（固定配置） ─── */
