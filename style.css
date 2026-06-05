@@ -926,8 +926,8 @@ body {
 /* ─── Gear button (full-screen top-right) ─── */
 .gear-btn {
   position: fixed;
-  top: max(8px, calc(env(safe-area-inset-top) + 2px));
-  right: max(8px, calc(env(safe-area-inset-right) + 2px));
+  top: max(40px, calc(env(safe-area-inset-top) + 34px));
+  right: max(6px, calc(env(safe-area-inset-right) + 0px));
   z-index: 100;
   width: 40px;
   height: 40px;
