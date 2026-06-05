@@ -51,14 +51,14 @@ body {
   height: 220px;
   background: linear-gradient(
     to bottom,
-    #ffffff 70%,
-    #ff6ec7 70%,
-    #ff6ec7 71.2%,
-    #ffffff 71.2%, #ffffff 72.4%,
-    #ff6ec7 72.4%,
-    #ff6ec7 74.8%,
-    #ffffff 74.8%, #ffffff 76.0%,
-    #ff6ec7 76.0%
+    #ffffff 60%,
+    #ff6ec7 60%,
+    #ff6ec7 61.2%,
+    #ffffff 61.2%, #ffffff 62.4%,
+    #ff6ec7 62.4%,
+    #ff6ec7 64.8%,
+    #ffffff 64.8%, #ffffff 66.0%,
+    #ff6ec7 66.0%
   );
   border-radius: 14px 14px 14px 14px;
   padding: 0;
