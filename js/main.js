@@ -36,7 +36,8 @@ const speedCorrectionSlider = document.getElementById('speed-correction');
 const speedCorrectionVal  = document.getElementById('speed-correction-val');
 const modeStatusText      = document.getElementById('mode-status-text');
 const nowPlayingText    = document.getElementById('now-playing-text');
-const tapeStatusName    = document.getElementById('tape-status-name');
+const tapeNameWrap      = document.getElementById('tape-name-wrap');
+const tapeNameText      = document.getElementById('tape-name-text');
 
 // Tape modal
 const tapeModal         = document.getElementById('tape-modal');
@@ -159,12 +160,22 @@ function setNowPlaying(title) {
   });
 }
 
-// ── Status display ────────────────────────────────────────────────────────────
-function updateStatusDisplay() {
-  if (!currentTape) { tapeStatusName.textContent = '— NO TAPE —'; return; }
-  const track = currentTape.tracks[currentTrackIdx];
-  const trackInfo = track ? ` [${currentTrackIdx + 1}/${currentTape.tracks.length}]` : '';
-  tapeStatusName.textContent = currentTape.name + trackInfo;
+// ── Tape name display in cassette ─────────────────────────────────────────────
+function setTapeName(tape) {
+  if (!tape || tape.isSingle) {
+    tapeNameWrap.style.display = 'none';
+    tapeNameText.textContent = '';
+    tapeNameText.classList.remove('scrolling');
+    return;
+  }
+  tapeNameWrap.style.display = '';
+  tapeNameText.textContent = tape.name;
+  tapeNameText.classList.remove('scrolling');
+  requestAnimationFrame(() => {
+    if (tapeNameText.scrollWidth > tapeNameWrap.clientWidth) {
+      tapeNameText.classList.add('scrolling');
+    }
+  });
 }
 
 // ── Visuals ───────────────────────────────────────────────────────────────────
@@ -208,7 +219,7 @@ function setCurrentTape(tape, startIdx = 0) {
   currentTape     = tape;
   currentTrackIdx = Math.max(0, Math.min(startIdx, tape.tracks.length - 1));
   shuffleEnabled  = tape.shuffle || false;
-  updateStatusDisplay();
+  setTapeName(tape);
   if (tape.tracks.length > 0) setNowPlaying(tape.tracks[currentTrackIdx].title);
 }
 
@@ -310,7 +321,6 @@ async function changeTrack(delta) {
     currentTrackIdx = (currentTrackIdx + delta + currentTape.tracks.length) % currentTape.tracks.length;
   }
   setNowPlaying(currentTape.tracks[currentTrackIdx].title);
-  updateStatusDisplay();
   if (wasPlaying) await startPlayback();
 }
 
@@ -972,4 +982,4 @@ function escHtml(str) {
 loadSettings();
 applySettingsToUI();
 updateModeStatusBar();
-updateStatusDisplay();
+setTapeName(null);

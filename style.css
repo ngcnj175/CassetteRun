@@ -113,10 +113,36 @@ body {
   100% { transform: translateX(-100%); }
 }
 
+/* ─── テープ名表示 ─── */
+.tape-name-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+  text-align: center;
+  width: 95%;
+  align-self: center;
+  min-height: 0;
+}
+.tape-name-wrap[style*="display: none"] { display: none !important; }
+#tape-name-text {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: #7b5ea7;
+}
+#tape-name-text.scrolling {
+  animation: marquee-scroll 14s linear infinite;
+  padding-right: 3em;
+}
+
 /* ─── 3本目の下線 ─── */
 .label-line {
   height: 0;
-  margin-top: 26px;
+  margin-top: 10px;
   border-top: 1px solid #9999aa;
   width: 95%;
   align-self: center;
