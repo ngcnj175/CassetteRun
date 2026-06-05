@@ -83,12 +83,10 @@ body {
   right: 2.5%;
   height: 1px;
   background: #9999aa;
-  top: 24px;      /* Line1: label(top:10, h:~13px) の直下 */
-  /* Line2: track name 下 (26+30=56, +2gap=58px → offset=34) */
-  /* Line3: tape name 下  (58+20=78, +2gap=80px → offset=56) */
-  box-shadow:
-    0 34px 0 0 #9999aa,
-    0 56px 0 0 #9999aa;
+  /* カセット上端(0)〜リール上端(83px)を3等分 */
+  /* Line1: 83÷3×1 ≈ 28px  Line2: 83÷3×2 ≈ 55px */
+  top: 28px;
+  box-shadow: 0 27px 0 0 #9999aa;  /* 28 + 27 = 55px */
 }
 
 /* ─── Layer 2: 上部テキスト（固定配置） ─── */
