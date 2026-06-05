@@ -933,16 +933,20 @@ body {
   height: 40px;
   background: transparent;
   border: none;
-  color: var(--text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
+  transition: filter 0.15s;
 }
-.gear-btn:active:not(:disabled) {
-  color: var(--highlight);
+.gear-btn img {
+  width: 24px;
+  height: 24px;
+  filter: invert(1) opacity(0.6);
+}
+.gear-btn:active:not(:disabled) img {
+  filter: invert(1) opacity(1);
 }
 .gear-btn:disabled {
   opacity: 0.25;
