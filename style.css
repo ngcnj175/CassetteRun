@@ -79,8 +79,8 @@ body {
 .cassette-bg-lines::before {
   content: '';
   position: absolute;
-  left: 2.5%;
-  right: 2.5%;
+  left: calc(2.5% + 15px);
+  right: calc(2.5% + 15px);
   height: 1px;
   background: #c0c0c8;
   opacity: 0.5;
@@ -97,7 +97,7 @@ body {
   left: 2.5%;
   right: 2.5%;
   z-index: 1;
-  text-align: left;
+  text-align: center;
   font-size: 0.6rem;
   font-weight: 500;
   letter-spacing: 0.05em;
