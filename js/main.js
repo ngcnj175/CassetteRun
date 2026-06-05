@@ -150,6 +150,11 @@ function showLoading(stepIdx) {
 
 // ── Marquee ───────────────────────────────────────────────────────────────────
 function setNowPlaying(title) {
+  if (!title) {
+    nowPlayingText.textContent = '';
+    nowPlayingText.classList.remove('scrolling');
+    return;
+  }
   nowPlayingText.textContent = title;
   nowPlayingText.classList.remove('scrolling');
   requestAnimationFrame(() => {
@@ -983,3 +988,4 @@ loadSettings();
 applySettingsToUI();
 updateModeStatusBar();
 setTapeName(null);
+setNowPlaying(null);
