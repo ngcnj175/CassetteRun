@@ -99,7 +99,7 @@ function nextBlobId() { return `lb_${blobIdSeq++}`; }
 let currentTape     = null;
 let currentTrackIdx = 0;
 let isPlaying        = false;
-let pitchFixed       = false;
+let pitchFixed       = true;
 let pitchPlayer      = null;
 let motionMode       = 'gps';
 let speedCorrection  = 1.0;
@@ -820,7 +820,7 @@ newTapeSave.addEventListener('click', () => {
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('cassette-settings') || '{}');
-    pitchFixed      = s.pitchFixed      === true;
+    pitchFixed      = s.pitchFixed      !== false;
     motionMode      = s.motionMode      === 'sensor' ? 'sensor' : 'gps';
     speedCorrection = typeof s.speedCorrection === 'number' ? s.speedCorrection : 1.0;
   } catch { /* ignore */ }
@@ -832,8 +832,8 @@ function saveSettings() {
 
 // ── Mode status bar ───────────────────────────────────────────────────────────
 function updateModeStatusBar() {
-  const motionLabel = motionMode === 'sensor' ? 'モーションセンサー' : 'GPS計測';
-  const pitchLabel  = pitchFixed ? '固定ピッチ' : 'テープ再生';
+  const motionLabel = motionMode === 'sensor' ? 'センサー' : 'GPS計測';
+  const pitchLabel  = pitchFixed ? 'ピッチ固定' : 'ピッチ変化';
   const corrLabel   = Math.abs(speedCorrection - 1.0) >= 0.005 ? ` ｜ ${speedCorrection.toFixed(2)}x` : '';
   modeStatusText.textContent = `${motionLabel} ｜ ${pitchLabel}${corrLabel}`;
 }
@@ -882,6 +882,19 @@ function closeSettingsModal() {
 btnSettings.addEventListener('click', openSettingsModal);
 settingsClose.addEventListener('click', closeSettingsModal);
 settingsOverlay.addEventListener('click', closeSettingsModal);
+
+sPitchLabelL.addEventListener('click', () => {
+  if (sPitchToggle.checked) { sPitchToggle.checked = false; sPitchToggle.dispatchEvent(new Event('change')); }
+});
+sPitchLabelR.addEventListener('click', () => {
+  if (!sPitchToggle.checked) { sPitchToggle.checked = true; sPitchToggle.dispatchEvent(new Event('change')); }
+});
+sMotionLabelL.addEventListener('click', () => {
+  if (sMotionToggle.checked) { sMotionToggle.checked = false; sMotionToggle.dispatchEvent(new Event('change')); }
+});
+sMotionLabelR.addEventListener('click', () => {
+  if (!sMotionToggle.checked) { sMotionToggle.checked = true; sMotionToggle.dispatchEvent(new Event('change')); }
+});
 
 sPitchToggle.addEventListener('change', () => {
   pitchFixed = sPitchToggle.checked;

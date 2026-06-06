@@ -989,22 +989,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 10px;
+}
+.settings-toggle-row .toggle-switch {
+  display: none;
 }
 .settings-side-label {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text);
-  opacity: 0.35;
-  transition: opacity 0.2s;
+  opacity: 0.5;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
   text-align: center;
-  min-width: 72px;
+  min-width: 80px;
+  padding: 6px 12px;
+  border: 1.5px solid rgba(208, 216, 224, 0.25);
+  border-radius: 7px;
+  cursor: pointer;
+  user-select: none;
 }
 .settings-side-label.active {
   opacity: 1;
   color: #fff;
+  border-color: var(--highlight);
+  background: rgba(144, 168, 192, 0.18);
 }
 .settings-desc {
   font-size: 0.65rem;
