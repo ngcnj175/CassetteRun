@@ -100,8 +100,7 @@ let blobIdSeq = Date.now();
 function nextBlobId() { return `lb_${blobIdSeq++}`; }
 
 // ── Audio validation limits ───────────────────────────────────────────────────
-const MAX_FILE_BYTES   = 200 * 1024 * 1024; // 200 MB
-const MAX_DURATION_SEC = 30 * 60;            // 30 分
+const MAX_FILE_BYTES = 200 * 1024 * 1024; // 200 MB
 
 function showValidating(name) {
   validateMsgEl.textContent = `検証中: ${name}`;
@@ -127,10 +126,6 @@ async function validateAndDecodeAudio(file) {
     audioBuf = await getContext().decodeAudioData(arrayBuffer);
   } catch {
     return { ok: false, error: '再生できない形式です（MP3, AAC, WAV 等をお試しください）。' };
-  }
-  if (audioBuf.duration > MAX_DURATION_SEC) {
-    const min = Math.floor(audioBuf.duration / 60);
-    return { ok: false, error: `曲が長すぎます（${min} 分）。上限は 30 分です。` };
   }
   return { ok: true, audioBuffer: audioBuf };
 }
