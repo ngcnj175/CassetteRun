@@ -348,32 +348,6 @@ body {
   gap: 8px;
 }
 
-/* ─── Tape status panel ─── */
-.tape-status-panel {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 6px 10px;
-  background: #0e0e1a;
-  border: 1px solid #2a2a3a;
-  border-radius: 6px;
-}
-.tape-status-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-.tape-status-name {
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  color: var(--highlight);
-  font-weight: 700;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 /* ─── Button rows ─── */
 .btn-row {
   display: flex;
@@ -454,19 +428,6 @@ body {
   color: #e08080;
 }
 
-/* ─── Toggles row (compact, side by side) ─── */
-.toggles-compact-row {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-.pitch-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 2px 0;
-}
 .toggle-label {
   font-size: 0.68rem;
   letter-spacing: 0.04em;

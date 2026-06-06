@@ -11,7 +11,6 @@
 // ── GPS 設定 ───────────────────────────────────────────────────────────────
 const GPS_SPEED_MIN    = 0.5;   // m/s 以下は停止扱い
 const GPS_SPEED_NORMAL = 3.0;   // m/s → 1.0x（約 5:30/km ペース）
-const GPS_SPEED_MAX    = 6.0;   // m/s → 2.0x 上限
 
 // ── センサー設定 ────────────────────────────────────────────────────────────
 const SMOOTHING_WINDOW = 30;
@@ -29,8 +28,6 @@ let animFrameId  = null;
 let watchId      = null;
 let accelSamples = [];
 let currentMode  = 'gps'; // 現在のモード
-
-export function getMotionMode() { return currentMode; }
 
 // ── GPS ──────────────────────────────────────────────────────────────────
 function speedToRate(speedMps) {
