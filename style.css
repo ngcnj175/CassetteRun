@@ -1101,3 +1101,38 @@ body {
   transform: translateX(18px);
   background: #f0a030;
 }
+
+/* ─── Validate overlay ─── */
+.validate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.validate-box {
+  background: #1e2a38;
+  border: 1px solid #4a6a8a;
+  border-radius: 12px;
+  padding: 24px 32px;
+  text-align: center;
+  color: #c8d8e8;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  min-width: 200px;
+}
+.validate-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #4a6a8a;
+  border-top-color: #90a8c0;
+  border-radius: 50%;
+  animation: validate-spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes validate-spin {
+  to { transform: rotate(360deg); }
+}

@@ -230,6 +230,14 @@
   <input type="file" id="single-file-input" accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*" style="display:none">
   <input type="file" id="tape-file-input" accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,audio/*" multiple style="display:none">
 
+  <!-- Validation overlay -->
+  <div id="validate-overlay" class="validate-overlay" style="display:none">
+    <div class="validate-box">
+      <div class="validate-spinner"></div>
+      <div id="validate-msg">検証中...</div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>

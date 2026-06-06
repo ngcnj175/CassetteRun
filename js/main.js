@@ -73,6 +73,10 @@ const loadingStageEl   = document.getElementById('loading-stage');
 const loadingStepEl    = document.getElementById('loading-step');
 const loadingFill      = document.getElementById('loading-fill');
 
+// Validate overlay
+const validateOverlay = document.getElementById('validate-overlay');
+const validateMsgEl   = document.getElementById('validate-msg');
+
 // ── ARCHIVE tape (built-in, all preset tracks) ────────────────────────────────
 const ARCHIVE_TAPE = {
   id: '__archive__',
@@ -94,6 +98,42 @@ function saveUserTapes(tapes) {
 const localBlobs = new Map();
 let blobIdSeq = Date.now();
 function nextBlobId() { return `lb_${blobIdSeq++}`; }
+
+// ── Audio validation limits ───────────────────────────────────────────────────
+const MAX_FILE_BYTES   = 200 * 1024 * 1024; // 200 MB
+const MAX_DURATION_SEC = 30 * 60;            // 30 分
+
+function showValidating(name) {
+  validateMsgEl.textContent = `検証中: ${name}`;
+  validateOverlay.style.display = 'flex';
+}
+function hideValidating() {
+  validateOverlay.style.display = 'none';
+}
+
+async function validateAndDecodeAudio(file) {
+  if (file.size > MAX_FILE_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(0);
+    return { ok: false, error: `ファイルサイズが大きすぎます（${mb} MB）。上限は 200 MB です。` };
+  }
+  let arrayBuffer;
+  try {
+    arrayBuffer = await file.arrayBuffer();
+  } catch {
+    return { ok: false, error: 'ファイルの読み込みに失敗しました。' };
+  }
+  let audioBuf;
+  try {
+    audioBuf = await getContext().decodeAudioData(arrayBuffer);
+  } catch {
+    return { ok: false, error: '再生できない形式です（MP3, AAC, WAV 等をお試しください）。' };
+  }
+  if (audioBuf.duration > MAX_DURATION_SEC) {
+    const min = Math.floor(audioBuf.duration / 60);
+    return { ok: false, error: `曲が長すぎます（${min} 分）。上限は 30 分です。` };
+  }
+  return { ok: true, audioBuffer: audioBuf };
+}
 
 // ── App state ─────────────────────────────────────────────────────────────────
 let currentTape     = null;
@@ -242,7 +282,11 @@ async function loadCurrentTrack() {
   } else if (track.type === 'local') {
     const blob = localBlobs.get(track.id);
     if (blob) {
-      await loadFile(blob.file);
+      if (blob.audioBuffer) {
+        loadBuffer(blob.audioBuffer);
+      } else {
+        await loadFile(blob.file);
+      }
     } else if (track.objectUrl) {
       const res = await fetch(track.objectUrl);
       const buf = await getContext().decodeAudioData(await res.arrayBuffer());
@@ -339,9 +383,13 @@ singleFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   singleFileInput.value = '';
+  showValidating(file.name);
+  const result = await validateAndDecodeAudio(file);
+  hideValidating();
+  if (!result.ok) { alert(result.error); return; }
   const id  = nextBlobId();
   const objectUrl = URL.createObjectURL(file);
-  localBlobs.set(id, { file, objectUrl });
+  localBlobs.set(id, { file, objectUrl, audioBuffer: result.audioBuffer });
   const name = file.name.replace(/\.[^.]+$/, '');
   setCurrentTape({
     id: `single_${Date.now()}`,
@@ -783,17 +831,24 @@ trackAddFromDevice.addEventListener('click', () => {
 // ─ Add local files to new tape / existing tape ───────────────────────────────
 newTapeAddLocal.addEventListener('click', () => { pickerMode = 'new-tape'; tapeFileInput.click(); });
 
-tapeFileInput.addEventListener('change', (e) => {
-  Array.from(e.target.files).forEach(file => {
-    const id  = nextBlobId();
+tapeFileInput.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  tapeFileInput.value = '';
+  const errors = [];
+  for (const file of files) {
+    showValidating(file.name);
+    const result = await validateAndDecodeAudio(file);
+    if (!result.ok) { errors.push(`${file.name}: ${result.error}`); continue; }
+    const id = nextBlobId();
     const objectUrl = URL.createObjectURL(file);
-    localBlobs.set(id, { file, objectUrl });
+    localBlobs.set(id, { file, objectUrl, audioBuffer: result.audioBuffer });
     const name = file.name.replace(/\.[^.]+$/, '');
     const t = { type: 'local', id, title: name, objectUrl };
     if (pickerMode === 'add-track') { draftTracks.push(t); }
     else { editingTape.tracks.push(t); }
-  });
-  tapeFileInput.value = '';
+  }
+  hideValidating();
+  if (errors.length > 0) alert(errors.join('\n'));
   if (pickerMode === 'add-track') { buildTapeTrackView(); }
   else { renderNewTapeTrackList(); }
 });
